@@ -9,7 +9,6 @@
 #include "afxdialogex.h"
 #include <winuser.h>
 #include <string>
-#include <opencv2/opencv.hpp>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -159,7 +158,7 @@ HCURSOR CUmaEvaluatorDlg::OnQueryDragIcon()
 
 
 
-cv::Mat GetDesktopImage()
+cv::Mat CUmaEvaluatorDlg::GetDesktopImage()
 {
 	// モニターサイズ取得
 	HWND desktop = ::GetDesktopWindow();
@@ -200,7 +199,7 @@ cv::Mat GetDesktopImage()
 	return img;
 }
 
-cv::Mat GetUmaWindowImage()
+cv::Mat CUmaEvaluatorDlg::GetUmaWindowImage()
 {
 	WCHAR umamusume[] = { L"umamusume" };
 
@@ -224,6 +223,12 @@ cv::Mat GetUmaWindowImage()
 	int width = rc.right;
 	int height = rc.bottom;
 
+	CString w, h;
+	w.Format(_T("%d"), width);
+	h.Format(_T("%d"), height);
+	((CEdit*)GetDlgItem(IDC_EDIT1))->SetWindowText(w);
+	((CEdit*)GetDlgItem(IDC_EDIT2))->SetWindowText(h);
+
 	POINT ppt;
 	ppt.x = 0;
 	ppt.y = 0;
@@ -237,8 +242,16 @@ cv::Mat GetUmaWindowImage()
 
 void CUmaEvaluatorDlg::OnBnClickedButton1()
 {
+	const int DEFAULT_WIDTH  = 408;
+	const int DEFAULT_HEIGHT = 725;
+
 	cv::Mat img = GetUmaWindowImage();
-	if( !img.empty()) {
-		cv::imshow("Screenshot", img);
-	}
+	if (img.empty()) 
+		return;
+
+	cv::Mat img2;
+	cv::resize(img, img2, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+
+	cv::imshow("Screenshot", img2);
+
 }

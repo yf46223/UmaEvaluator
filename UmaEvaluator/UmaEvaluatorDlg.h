@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <opencv2/opencv.hpp>
 
 // CUmaEvaluatorDlg ダイアログ
 class CUmaEvaluatorDlg : public CDialogEx
@@ -20,6 +21,9 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV サポート
 
+private:
+	cv::Mat GetDesktopImage();
+	cv::Mat GetUmaWindowImage();
 
 // 実装
 protected:

@@ -239,19 +239,60 @@ cv::Mat CUmaEvaluatorDlg::GetUmaWindowImage()
 	return cv::Mat(desktop, cv::Rect(ppt.x, ppt.y, width, height));
 }
 
+bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref)
+{
+	cv::Mat result;
+	cv::matchTemplate(img, img_ref, result, cv::TM_CCORR_NORMED);
+
+	double d;
+	cv::minMaxLoc(result, &d);
+	return (d > 0.99);
+}
 
 void CUmaEvaluatorDlg::OnBnClickedButton1()
 {
 	const int DEFAULT_WIDTH  = 408;
 	const int DEFAULT_HEIGHT = 725;
-
+/*
 	cv::Mat img = GetUmaWindowImage();
 	if (img.empty()) 
 		return;
 
-	cv::Mat img2;
-	cv::resize(img, img2, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+	cv::Mat imgResize;
+	cv::resize(img, imgResize, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
-	cv::imshow("Screenshot", img2);
+	cv::imwrite("C:\\tmp\\uma\\finish.jpg", img_resize);
+*/
+
+	cv::Mat img_finish = cv::imread("C:\\tmp\\uma\\finish.jpg");
+	cv::Mat img_status(img_finish, cv::Rect(210, 165, 80, 20));
+
+	cv::Mat img_status_ref = cv::imread("C:\\tmp\\uma\\status.jpg");
+
+	if( MatchImage(img_status, img_status_ref) ) {
+		cv::Mat img_turf (img_finish, cv::Rect(311, 338, 12, 13));
+		cv::Mat img_dart (img_finish, cv::Rect(374, 338, 12, 13));
+		cv::Mat img_short(img_finish, cv::Rect(311, 363, 12, 13));
+
+		const std::string TEKISEI[8] = { "S", "A", "B", "C", "D", "E", "F", "G" };
+
+		for (int i = 0; i < 8; ++i) {
+			std::string sRefFile = "C:\\work\\uma\\UmaEvaluator\\x64\\Debug\\img\\" + TEKISEI[i] + ".jpg";
+			cv::Mat img_tekisei = cv::imread(sRefFile.c_str());
+			if (MatchImage(img_turf, img_tekisei)) {
+				((CComboBox*)GetDlgItem(IDC_COMBO_TURF))->SetCurSel(i);
+				break;
+			}
+		}
+
+		for (int i = 0; i < 8; ++i) {
+			std::string sRefFile = "C:\\work\\uma\\UmaEvaluator\\x64\\Debug\\img\\" + TEKISEI[i] + ".jpg";
+			cv::Mat img_tekisei = cv::imread(sRefFile.c_str());
+			if (MatchImage(img_dart, img_tekisei)) {
+				((CComboBox*)GetDlgItem(IDC_COMBO_DART))->SetCurSel(i);
+				break;
+			}
+		}
+	}
 
 }

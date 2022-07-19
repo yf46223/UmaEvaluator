@@ -24,6 +24,7 @@ public:
 private:
 	cv::Mat GetDesktopImage();
 	cv::Mat GetUmaWindowImage();
+	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref);
 
 // 実装
 protected:

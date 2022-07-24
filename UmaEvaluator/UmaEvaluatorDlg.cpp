@@ -284,6 +284,13 @@ int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img)
 	return iMax;
 }
 
+/*
+int GetNumberOCR(const cv::Mat& img) {
+
+
+}
+*/
+
 void CUmaEvaluatorDlg::OnBnClickedButton1()
 {
 	const int DEFAULT_WIDTH  = 450;
@@ -292,24 +299,71 @@ void CUmaEvaluatorDlg::OnBnClickedButton1()
 	string sBinDir = GetExeDir();
 	string sImgDir = sBinDir + "img\\";
 
-	
-	//cv::Mat img = GetUmaWindowImage();
-	//if (img.empty()) 
-	//	return;
-
 	/*
-	cv::Mat img = cv::imread(sImgDir + "UMPD-MatikaneTannhauser-MNT03.jpg");
+	cv::Mat img = GetUmaWindowImage();
+	if (img.empty()) 
+		return;
+
+	//cv::Mat img = cv::imread(sImgDir + "UMPD-MatikaneTannhauser-MNT03.jpg");
 
 	cv::Mat img_resize;
 	cv::resize(img, img_resize, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
-	cv::imwrite(sImgDir + "finish_machitan.png", img_resize);
+	cv::imwrite(sImgDir + "skill_bakushin.png", img_resize);
 
 	return;
 	*/
 
+	cv::Mat img_finish = cv::imread(sImgDir + "skill_bakushin2.png");
 
-	cv::Mat img_finish = cv::imread(sImgDir + "finish_machitan.png");
+	cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
+	cv::Mat img_skill_select_ref = cv::imread(sImgDir + "skill_select.png");
+
+	if (MatchImage(img_skill_select, img_skill_select_ref)) {
+		cv::Mat img_skill_pt(img_finish, cv::Rect(330, 250, 70, 25));
+
+		auto ocr = cv::text::OCRTesseract::create((sBinDir + "tessdata-4.1.0").c_str(), "eng", "0123456789");
+
+		string text;
+		vector<cv::Rect> boxes;
+		vector<string> words;
+		vector<float> confidences;
+
+		cv::Mat img_gray;
+		cv::cvtColor(img_skill_pt, img_gray, cv::COLOR_RGB2GRAY);
+
+		ocr->run(img_gray, text, &boxes, &words, &confidences);
+
+		int n = atoi(text.c_str());
+		CString cs;
+		cs.Format(_T("%d"), n);
+		((CEdit*)GetDlgItem(IDC_EDIT_SKILL_PT))->SetWindowText(cs);
+
+		return;
+
+		cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 350));
+		cv::Mat img_plus_ref = cv::imread(sImgDir + "plus.png");
+
+		for (int i = 0; i < 5; ++i) {
+			cv::Mat result;
+			cv::matchTemplate(img_plus, img_plus_ref, result, cv::TM_CCORR_NORMED);
+
+			double d;
+			cv::Point p;
+			cv::minMaxLoc(result, NULL, &d, NULL, &p);
+
+			if (d < 0.99)
+				break;
+
+			//printf("%f %d\n", d, p.y);
+			cv::Point p1(35, p.y + 35);
+			cv::rectangle(img_plus, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
+		}
+	}
+
+
+	return;
+
 
 	cv::Mat img_status(img_finish, cv::Rect(230, 180, 80, 20));
 	cv::Mat img_status_ref = cv::imread(sImgDir + "status.png");

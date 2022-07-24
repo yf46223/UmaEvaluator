@@ -22,8 +22,9 @@
 #define IDC_COMBO_OIKOMI                1017
 #define IDC_EDIT_POWER                  1018
 #define IDC_EDIT_KONJOU                 1019
-#define IDC_EDIT5                       1020
 #define IDC_EDIT_KASHIKOSA              1020
+#define IDC_EDIT_SKILL_PT               1021
+#define IDC_EDIT_SPEED2                 1022
 
 // Next default values for new objects
 // 

@@ -14,6 +14,7 @@
 #define new DEBUG_NEW
 #endif
 
+using namespace std;
 
 // アプリケーションのバージョン情報に使われる CAboutDlg ダイアログ
 
@@ -223,12 +224,6 @@ cv::Mat CUmaEvaluatorDlg::GetUmaWindowImage()
 	int width = rc.right;
 	int height = rc.bottom;
 
-	CString w, h;
-	w.Format(_T("%d"), width);
-	h.Format(_T("%d"), height);
-	((CEdit*)GetDlgItem(IDC_EDIT1))->SetWindowText(w);
-	((CEdit*)GetDlgItem(IDC_EDIT2))->SetWindowText(h);
-
 	POINT ppt;
 	ppt.x = 0;
 	ppt.y = 0;
@@ -239,60 +234,142 @@ cv::Mat CUmaEvaluatorDlg::GetUmaWindowImage()
 	return cv::Mat(desktop, cv::Rect(ppt.x, ppt.y, width, height));
 }
 
-bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref)
+double MatchImageRel(const cv::Mat& img, const cv::Mat& img_ref)
 {
 	cv::Mat result;
 	cv::matchTemplate(img, img_ref, result, cv::TM_CCORR_NORMED);
 
 	double d;
 	cv::minMaxLoc(result, &d);
+	return d;
+}
+
+bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref)
+{
+	double d = MatchImageRel(img, img_ref);
 	return (d > 0.99);
+}
+
+
+string GetExeDir()
+{
+	TCHAR path[MAX_PATH];
+	if (!::GetModuleFileName(NULL, path, MAX_PATH))
+		return "";
+
+	CString csPath = path;
+	string sPath = CStringA(csPath).GetBuffer();
+
+	const size_t i = sPath.rfind('\\');
+	if (string::npos == i)
+		return "";
+
+	string sDir = sPath.substr(0, i+1);
+
+	return sDir;
+}
+
+int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img)
+{
+	double dMax = DBL_MIN;
+	int iMax = 9;
+	for (int i = 0; i < 8; ++i) {
+		double d = MatchImageRel(img, img_ref[i]);
+		if (d > dMax) {
+			dMax = d;
+			iMax = i;
+		}
+	}
+
+	return iMax;
 }
 
 void CUmaEvaluatorDlg::OnBnClickedButton1()
 {
-	const int DEFAULT_WIDTH  = 408;
-	const int DEFAULT_HEIGHT = 725;
-/*
-	cv::Mat img = GetUmaWindowImage();
-	if (img.empty()) 
-		return;
+	const int DEFAULT_WIDTH  = 450;
+	const int DEFAULT_HEIGHT = 800;
 
-	cv::Mat imgResize;
-	cv::resize(img, imgResize, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+	string sBinDir = GetExeDir();
+	string sImgDir = sBinDir + "img\\";
 
-	cv::imwrite("C:\\tmp\\uma\\finish.jpg", img_resize);
-*/
+	
+	//cv::Mat img = GetUmaWindowImage();
+	//if (img.empty()) 
+	//	return;
 
-	cv::Mat img_finish = cv::imread("C:\\tmp\\uma\\finish.jpg");
-	cv::Mat img_status(img_finish, cv::Rect(210, 165, 80, 20));
+	/*
+	cv::Mat img = cv::imread(sImgDir + "UMPD-MatikaneTannhauser-MNT03.jpg");
 
-	cv::Mat img_status_ref = cv::imread("C:\\tmp\\uma\\status.jpg");
+	cv::Mat img_resize;
+	cv::resize(img, img_resize, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+
+	cv::imwrite(sImgDir + "finish_machitan.png", img_resize);
+
+	return;
+	*/
+
+
+	cv::Mat img_finish = cv::imread(sImgDir + "finish_machitan.png");
+
+	cv::Mat img_status(img_finish, cv::Rect(230, 180, 80, 20));
+	cv::Mat img_status_ref = cv::imread(sImgDir + "status.png");
 
 	if( MatchImage(img_status, img_status_ref) ) {
-		cv::Mat img_turf (img_finish, cv::Rect(311, 338, 12, 13));
-		cv::Mat img_dart (img_finish, cv::Rect(374, 338, 12, 13));
-		cv::Mat img_short(img_finish, cv::Rect(311, 363, 12, 13));
+		cv::Mat img_status_detail(img_finish, cv::Rect(240, 240, 70, 110));
+		cv::Mat img_status_detail_ref = cv::imread(sImgDir + "status_detail.png");
 
-		const std::string TEKISEI[8] = { "S", "A", "B", "C", "D", "E", "F", "G" };
+		if (MatchImage(img_status_detail, img_status_detail_ref)) {
 
-		for (int i = 0; i < 8; ++i) {
-			std::string sRefFile = "C:\\work\\uma\\UmaEvaluator\\x64\\Debug\\img\\" + TEKISEI[i] + ".jpg";
-			cv::Mat img_tekisei = cv::imread(sRefFile.c_str());
-			if (MatchImage(img_turf, img_tekisei)) {
-				((CComboBox*)GetDlgItem(IDC_COMBO_TURF))->SetCurSel(i);
-				break;
+			auto ocr = cv::text::OCRTesseract::create((sBinDir + "tessdata-4.1.0").c_str(), "eng", "0123456789");
+
+			string text;
+			vector<cv::Rect> boxes;
+			vector<string> words;
+			vector<float> confidences;
+
+			int EDITS[5] = { IDC_EDIT_SPEED, IDC_EDIT_STAMINA, IDC_EDIT_POWER, IDC_EDIT_KONJOU, IDC_EDIT_KASHIKOSA };
+			cv::Rect rect(345, 230, 60, 30);
+
+			for (int i = 0; i < 5; ++i) {
+				cv::Mat img(img_finish, rect);
+
+				cv::Mat img_gray;
+				cv::cvtColor(img, img_gray, cv::COLOR_RGB2GRAY);
+
+				ocr->run(img_gray, text, &boxes, &words, &confidences);
+
+				int n = atoi(text.c_str());
+				CString cs;
+				cs.Format(_T("%d"), n);
+				((CEdit*)GetDlgItem(EDITS[i]))->SetWindowText(cs);
+
+				rect.y += 24;
 			}
 		}
 
+		int COMBOS[10] = { 
+			IDC_COMBO_TURF, IDC_COMBO_DART, 
+			IDC_COMBO_SHORT, IDC_COMBO_MILE, IDC_COMBO_MIDDLE, IDC_COMBO_LONG, 
+			IDC_COMBO_NIGE, IDC_COMBO_SENKOU, IDC_COMBO_SASHI, IDC_COMBO_OIKOMI
+		};
+
+		int RECT_RIGHT[2] = { 343, 413 };
+		int RECT_TOP  [5] = { 373, 401, 423, 455, 477 };
+
+		const string TEKISEI[8] = { "S", "A", "B", "C", "D", "E", "F", "G" };
+
+		cv::Mat img_tekisei[8];
 		for (int i = 0; i < 8; ++i) {
-			std::string sRefFile = "C:\\work\\uma\\UmaEvaluator\\x64\\Debug\\img\\" + TEKISEI[i] + ".jpg";
-			cv::Mat img_tekisei = cv::imread(sRefFile.c_str());
-			if (MatchImage(img_dart, img_tekisei)) {
-				((CComboBox*)GetDlgItem(IDC_COMBO_DART))->SetCurSel(i);
-				break;
-			}
+			string sRefFile = sImgDir + TEKISEI[i] + ".png";
+			img_tekisei[i] = cv::imread(sRefFile);
+		}
+
+		for (int i = 0; i < 10; ++i) {
+			int r = RECT_RIGHT[i % 2];
+			int t = RECT_TOP  [i / 2];
+			cv::Mat img(img_finish, cv::Rect(r, t, 14, 14));
+			int j = GetTekisei(img_tekisei, img);
+			((CComboBox*)GetDlgItem(COMBOS[i]))->SetCurSel(j);
 		}
 	}
-
 }

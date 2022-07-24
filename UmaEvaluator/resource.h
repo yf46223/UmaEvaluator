@@ -8,19 +8,30 @@
 #define IDD_UMAEVALUATOR_DIALOG         102
 #define IDR_MAINFRAME                   128
 #define IDC_BUTTON1                     1000
-#define IDC_EDIT1                       1001
-#define IDC_EDIT2                       1002
 #define IDC_COMBO_TURF                  1006
-#define IDC_COMBO2                      1007
-#define IDC_COMBO_DART                  1007
+#define IDC_EDIT_SPEED                  1007
+#define IDC_COMBO_SHORT                 1008
+#define IDC_COMBO_NIGE                  1009
+#define IDC_COMBO_MIDDLE                1010
+#define IDC_COMBO_SASHI                 1011
+#define IDC_COMBO_DART                  1012
+#define IDC_EDIT_STAMINA                1013
+#define IDC_COMBO_MILE                  1014
+#define IDC_COMBO_LONG                  1015
+#define IDC_COMBO_SENKOU                1016
+#define IDC_COMBO_OIKOMI                1017
+#define IDC_EDIT_POWER                  1018
+#define IDC_EDIT_KONJOU                 1019
+#define IDC_EDIT5                       1020
+#define IDC_EDIT_KASHIKOSA              1020
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1007
+#define _APS_NEXT_CONTROL_VALUE         1008
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

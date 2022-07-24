@@ -284,12 +284,26 @@ int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img)
 	return iMax;
 }
 
-/*
-int GetNumberOCR(const cv::Mat& img) {
+int GetNumberOCR(const cv::Mat& img)
+{
+	string sBinDir = GetExeDir();
 
+	static auto ocr = cv::text::OCRTesseract::create((sBinDir + "tessdata-4.1.0").c_str(), "eng", "0123456789");
 
+	string text;
+	vector<cv::Rect> boxes;
+	vector<string> words;
+	vector<float> confidences;
+
+	cv::Mat img_gray;
+	cv::cvtColor(img, img_gray, cv::COLOR_RGB2GRAY);
+
+	ocr->run(img_gray, text, &boxes, &words, &confidences);
+
+	int n = atoi(text.c_str());
+
+	return n;
 }
-*/
 
 void CUmaEvaluatorDlg::OnBnClickedButton1()
 {
@@ -314,7 +328,8 @@ void CUmaEvaluatorDlg::OnBnClickedButton1()
 	return;
 	*/
 
-	cv::Mat img_finish = cv::imread(sImgDir + "skill_bakushin2.png");
+	//cv::Mat img_finish = cv::imread(sImgDir + "skill_bakushin2.png");
+	cv::Mat img_finish = cv::imread(sImgDir + "finish_spe.png");
 
 	cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
 	cv::Mat img_skill_select_ref = cv::imread(sImgDir + "skill_select.png");
@@ -322,24 +337,10 @@ void CUmaEvaluatorDlg::OnBnClickedButton1()
 	if (MatchImage(img_skill_select, img_skill_select_ref)) {
 		cv::Mat img_skill_pt(img_finish, cv::Rect(330, 250, 70, 25));
 
-		auto ocr = cv::text::OCRTesseract::create((sBinDir + "tessdata-4.1.0").c_str(), "eng", "0123456789");
-
-		string text;
-		vector<cv::Rect> boxes;
-		vector<string> words;
-		vector<float> confidences;
-
-		cv::Mat img_gray;
-		cv::cvtColor(img_skill_pt, img_gray, cv::COLOR_RGB2GRAY);
-
-		ocr->run(img_gray, text, &boxes, &words, &confidences);
-
-		int n = atoi(text.c_str());
+		int n = GetNumberOCR(img_skill_pt);
 		CString cs;
 		cs.Format(_T("%d"), n);
 		((CEdit*)GetDlgItem(IDC_EDIT_SKILL_PT))->SetWindowText(cs);
-
-		return;
 
 		cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 350));
 		cv::Mat img_plus_ref = cv::imread(sImgDir + "plus.png");
@@ -362,9 +363,6 @@ void CUmaEvaluatorDlg::OnBnClickedButton1()
 	}
 
 
-	return;
-
-
 	cv::Mat img_status(img_finish, cv::Rect(230, 180, 80, 20));
 	cv::Mat img_status_ref = cv::imread(sImgDir + "status.png");
 
@@ -374,30 +372,19 @@ void CUmaEvaluatorDlg::OnBnClickedButton1()
 
 		if (MatchImage(img_status_detail, img_status_detail_ref)) {
 
-			auto ocr = cv::text::OCRTesseract::create((sBinDir + "tessdata-4.1.0").c_str(), "eng", "0123456789");
-
-			string text;
-			vector<cv::Rect> boxes;
-			vector<string> words;
-			vector<float> confidences;
-
 			int EDITS[5] = { IDC_EDIT_SPEED, IDC_EDIT_STAMINA, IDC_EDIT_POWER, IDC_EDIT_KONJOU, IDC_EDIT_KASHIKOSA };
-			cv::Rect rect(345, 230, 60, 30);
+			int RECT_TOP[5] = { 232, 255, 279, 302, 326 };
 
 			for (int i = 0; i < 5; ++i) {
+				cv::Rect rect(345, RECT_TOP[i], 60, 28);
+
 				cv::Mat img(img_finish, rect);
 
-				cv::Mat img_gray;
-				cv::cvtColor(img, img_gray, cv::COLOR_RGB2GRAY);
+				int n = GetNumberOCR(img);
 
-				ocr->run(img_gray, text, &boxes, &words, &confidences);
-
-				int n = atoi(text.c_str());
 				CString cs;
 				cs.Format(_T("%d"), n);
 				((CEdit*)GetDlgItem(EDITS[i]))->SetWindowText(cs);
-
-				rect.y += 24;
 			}
 		}
 

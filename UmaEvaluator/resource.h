@@ -24,7 +24,8 @@
 #define IDC_EDIT_KONJOU                 1019
 #define IDC_EDIT_KASHIKOSA              1020
 #define IDC_EDIT_SKILL_PT               1021
-#define IDC_EDIT_SPEED2                 1022
+#define IDC_COMBO_STARTS                1022
+#define IDC_COMBO_STAR                  1022
 
 // Next default values for new objects
 // 

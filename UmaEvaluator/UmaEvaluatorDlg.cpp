@@ -331,6 +331,82 @@ void CUmaEvaluatorDlg::OnBnClickedButton1()
 	//cv::Mat img_finish = cv::imread(sImgDir + "skill_bakushin2.png");
 	cv::Mat img_finish = cv::imread(sImgDir + "finish_spe.png");
 
+	// 育成完了確認
+	cv::Mat img_kanryou_kakunin(img_finish, cv::Rect(15, 5, 90, 15));
+	cv::Mat img_kanryou_kakunin_ref = cv::imread(sImgDir + "kanryou_kakunin.png");
+
+	if (MatchImage(img_kanryou_kakunin, img_kanryou_kakunin_ref)) {
+
+		// 星
+		{
+			int nStar = 0;
+			int l = 35;
+			for (int i = 0; i < 5; ++i) {
+				cv::Vec3b pix = img_finish.at<cv::Vec3b>(cv::Point(l, 450));
+				int b = pix[0];
+				if (150 < b) break;
+				++nStar;
+				l += 25;
+			}
+			if (0 < nStar) {
+				((CComboBox*)GetDlgItem(IDC_COMBO_STAR))->SetCurSel(nStar - 1);
+			}
+		}
+
+		// ステータス
+		cv::Mat img_status(img_finish, cv::Rect(230, 180, 80, 20));
+		cv::Mat img_status_ref = cv::imread(sImgDir + "status.png");
+
+		if (MatchImage(img_status, img_status_ref)) {
+			cv::Mat img_status_detail(img_finish, cv::Rect(240, 240, 70, 110));
+			cv::Mat img_status_detail_ref = cv::imread(sImgDir + "status_detail.png");
+
+			if (MatchImage(img_status_detail, img_status_detail_ref)) {
+
+				int EDITS[5] = { IDC_EDIT_SPEED, IDC_EDIT_STAMINA, IDC_EDIT_POWER, IDC_EDIT_KONJOU, IDC_EDIT_KASHIKOSA };
+				int RECT_TOP[5] = { 232, 255, 279, 302, 326 };
+
+				for (int i = 0; i < 5; ++i) {
+					cv::Rect rect(345, RECT_TOP[i], 60, 28);
+
+					cv::Mat img(img_finish, rect);
+
+					int n = GetNumberOCR(img);
+
+					CString cs;
+					cs.Format(_T("%d"), n);
+					((CEdit*)GetDlgItem(EDITS[i]))->SetWindowText(cs);
+				}
+			}
+
+			int COMBOS[10] = {
+				IDC_COMBO_TURF, IDC_COMBO_DART,
+				IDC_COMBO_SHORT, IDC_COMBO_MILE, IDC_COMBO_MIDDLE, IDC_COMBO_LONG,
+				IDC_COMBO_NIGE, IDC_COMBO_SENKOU, IDC_COMBO_SASHI, IDC_COMBO_OIKOMI
+			};
+
+			int RECT_RIGHT[2] = { 343, 413 };
+			int RECT_TOP[5] = { 373, 401, 423, 455, 477 };
+
+			const string TEKISEI[8] = { "S", "A", "B", "C", "D", "E", "F", "G" };
+
+			cv::Mat img_tekisei[8];
+			for (int i = 0; i < 8; ++i) {
+				string sRefFile = sImgDir + TEKISEI[i] + ".png";
+				img_tekisei[i] = cv::imread(sRefFile);
+			}
+
+			for (int i = 0; i < 10; ++i) {
+				int r = RECT_RIGHT[i % 2];
+				int t = RECT_TOP[i / 2];
+				cv::Mat img(img_finish, cv::Rect(r, t, 14, 14));
+				int j = GetTekisei(img_tekisei, img);
+				((CComboBox*)GetDlgItem(COMBOS[i]))->SetCurSel(j);
+			}
+		}
+	}
+
+
 	cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
 	cv::Mat img_skill_select_ref = cv::imread(sImgDir + "skill_select.png");
 
@@ -362,55 +438,4 @@ void CUmaEvaluatorDlg::OnBnClickedButton1()
 		}
 	}
 
-
-	cv::Mat img_status(img_finish, cv::Rect(230, 180, 80, 20));
-	cv::Mat img_status_ref = cv::imread(sImgDir + "status.png");
-
-	if( MatchImage(img_status, img_status_ref) ) {
-		cv::Mat img_status_detail(img_finish, cv::Rect(240, 240, 70, 110));
-		cv::Mat img_status_detail_ref = cv::imread(sImgDir + "status_detail.png");
-
-		if (MatchImage(img_status_detail, img_status_detail_ref)) {
-
-			int EDITS[5] = { IDC_EDIT_SPEED, IDC_EDIT_STAMINA, IDC_EDIT_POWER, IDC_EDIT_KONJOU, IDC_EDIT_KASHIKOSA };
-			int RECT_TOP[5] = { 232, 255, 279, 302, 326 };
-
-			for (int i = 0; i < 5; ++i) {
-				cv::Rect rect(345, RECT_TOP[i], 60, 28);
-
-				cv::Mat img(img_finish, rect);
-
-				int n = GetNumberOCR(img);
-
-				CString cs;
-				cs.Format(_T("%d"), n);
-				((CEdit*)GetDlgItem(EDITS[i]))->SetWindowText(cs);
-			}
-		}
-
-		int COMBOS[10] = { 
-			IDC_COMBO_TURF, IDC_COMBO_DART, 
-			IDC_COMBO_SHORT, IDC_COMBO_MILE, IDC_COMBO_MIDDLE, IDC_COMBO_LONG, 
-			IDC_COMBO_NIGE, IDC_COMBO_SENKOU, IDC_COMBO_SASHI, IDC_COMBO_OIKOMI
-		};
-
-		int RECT_RIGHT[2] = { 343, 413 };
-		int RECT_TOP  [5] = { 373, 401, 423, 455, 477 };
-
-		const string TEKISEI[8] = { "S", "A", "B", "C", "D", "E", "F", "G" };
-
-		cv::Mat img_tekisei[8];
-		for (int i = 0; i < 8; ++i) {
-			string sRefFile = sImgDir + TEKISEI[i] + ".png";
-			img_tekisei[i] = cv::imread(sRefFile);
-		}
-
-		for (int i = 0; i < 10; ++i) {
-			int r = RECT_RIGHT[i % 2];
-			int t = RECT_TOP  [i / 2];
-			cv::Mat img(img_finish, cv::Rect(r, t, 14, 14));
-			int j = GetTekisei(img_tekisei, img);
-			((CComboBox*)GetDlgItem(COMBOS[i]))->SetCurSel(j);
-		}
-	}
 }

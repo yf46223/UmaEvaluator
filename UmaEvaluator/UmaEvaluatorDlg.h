@@ -38,5 +38,22 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnBnClickedButton1();
+	afx_msg void OnBnClickedButtonDetect();
+	CListBox m_listSkills;
+	CComboBox m_comboStar;
+	CEdit m_editSpeed;
+	CEdit m_editStamina;
+	CEdit m_editPower;
+	CEdit m_editKonjou;
+	CEdit m_editKashikosa;
+	CComboBox m_comboTurf;
+	CComboBox m_comboDart;
+	CComboBox m_comboShort;
+	CComboBox m_comboMile;
+	CComboBox m_comboMiddle;
+	CComboBox m_comboLong;
+	CComboBox m_comboNige;
+	CComboBox m_comboSenkou;
+	CComboBox m_comboSashi;
+	CComboBox m_comboOikomi;
 };

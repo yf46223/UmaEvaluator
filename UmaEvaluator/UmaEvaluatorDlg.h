@@ -6,6 +6,16 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/text.hpp>
+#include <string>
+
+using namespace std;
+
+struct CSkill 
+{
+	int idx;
+	wstring sName;
+	cv::Mat img;
+};
 
 // CUmaEvaluatorDlg ダイアログ
 class CUmaEvaluatorDlg : public CDialogEx
@@ -26,6 +36,10 @@ private:
 	cv::Mat GetDesktopImage();
 	cv::Mat GetUmaWindowImage();
 	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref);
+	wstring GetExeDir();
+	wstring GetImgDir() { return GetExeDir() + L"img\\"; }
+	int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img);
+	int GetNumberOCR(const cv::Mat& img);
 
 // 実装
 protected:
@@ -56,4 +70,8 @@ public:
 	CComboBox m_comboSenkou;
 	CComboBox m_comboSashi;
 	CComboBox m_comboOikomi;
+	CEdit m_editSkillPt;
+
+private:
+	vector<CSkill> m_skills;
 };

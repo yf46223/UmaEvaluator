@@ -8,7 +8,7 @@
 #include "UmaEvaluatorDlg.h"
 #include "afxdialogex.h"
 #include <winuser.h>
-#include <string>
+#include <fstream>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -79,6 +79,7 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_SENKOU, m_comboSenkou);
 	DDX_Control(pDX, IDC_COMBO_SASHI, m_comboSashi);
 	DDX_Control(pDX, IDC_COMBO_OIKOMI, m_comboOikomi);
+	DDX_Control(pDX, IDC_EDIT_SKILL_PT, m_editSkillPt);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -121,6 +122,37 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 小さいアイコンの設定
 
 	// TODO: 初期化をここに追加します。
+
+	{
+		// スキル情報の読み込み
+		wstring sImgDir = GetImgDir();
+		wstring sSkillDir = sImgDir + L"skills\\";
+		wstring sFileCSV = sSkillDir + L"skills.csv";
+		wifstream ifs(sFileCSV);
+
+		auto Loc = std::locale("Japanese");
+		auto L = ifs.imbue(Loc);
+
+		wstring line;
+		while (getline(ifs, line)) {
+
+			CSkill skill;
+
+			wstringstream iss(line);
+			wstring sIdx, sName;
+			getline(iss, sIdx, L'\t');
+			skill.idx = stoi(sIdx);
+			getline(iss, sName, L'\t');
+			skill.sName = sName;
+			wstring sFilePNG = sSkillDir + sIdx + L".png";
+			skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+			m_skills.push_back(skill);
+		}
+
+		ifs.imbue(L);
+		ifs.close();
+	}
 
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
 }
@@ -268,25 +300,25 @@ bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref)
 }
 
 
-string GetExeDir()
+wstring CUmaEvaluatorDlg::GetExeDir()
 {
 	TCHAR path[MAX_PATH];
 	if (!::GetModuleFileName(NULL, path, MAX_PATH))
-		return "";
+		return L"";
 
 	CString csPath = path;
-	string sPath = CStringA(csPath).GetBuffer();
+	wstring sPath = csPath.GetBuffer();
 
 	const size_t i = sPath.rfind('\\');
-	if (string::npos == i)
-		return "";
+	if (wstring::npos == i)
+		return L"";
 
-	string sDir = sPath.substr(0, i+1);
+	wstring sDir = sPath.substr(0, i+1);
 
 	return sDir;
 }
 
-int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img)
+int CUmaEvaluatorDlg::GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img)
 {
 	double dMax = DBL_MIN;
 	int iMax = 9;
@@ -301,11 +333,13 @@ int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img)
 	return iMax;
 }
 
-int GetNumberOCR(const cv::Mat& img)
+int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img)
 {
-	string sBinDir = GetExeDir();
+	wstring sBinDir = GetExeDir();
+	wstring sTessDir = sBinDir + L"tessdata-4.1.0";
+	string s(sTessDir.begin(), sTessDir.end());
 
-	static auto ocr = cv::text::OCRTesseract::create((sBinDir + "tessdata-4.1.0").c_str(), "eng", "0123456789");
+	static auto ocr = cv::text::OCRTesseract::create(s.c_str(), "eng", "0123456789");
 
 	string text;
 	vector<cv::Rect> boxes;
@@ -327,30 +361,26 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 	const int DEFAULT_WIDTH = 450;
 	const int DEFAULT_HEIGHT = 800;
 
-	string sBinDir = GetExeDir();
-	string sImgDir = sBinDir + "img\\";
+	wstring sBinDir = GetExeDir();
+	wstring sImgDir = GetImgDir();
 
-	/*
+	
 	cv::Mat img = GetUmaWindowImage();
 	if (img.empty())
 		return;
 
-	//cv::Mat img = cv::imread(sImgDir + "UMPD-MatikaneTannhauser-MNT03.jpg");
+	cv::Mat img_finish;
+	cv::resize(img, img_finish, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
-	cv::Mat img_resize;
-	cv::resize(img, img_resize, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+	//wstring sFilePNG = sImgDir + L"skill_bakushin1.png";
+	//wstring sFilePNG = sImgDir + L"finish_spe.png";
 
-	cv::imwrite(sImgDir + "skill_bakushin.png", img_resize);
-
-	return;
-	*/
-
-	cv::Mat img_finish = cv::imread(sImgDir + "skill_bakushin2.png");
-	//cv::Mat img_finish = cv::imread(sImgDir + "finish_spe.png");
+	//cv::Mat img_finish = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 	// 育成完了確認
 	cv::Mat img_kanryou_kakunin(img_finish, cv::Rect(15, 5, 90, 15));
-	cv::Mat img_kanryou_kakunin_ref = cv::imread(sImgDir + "kanryou_kakunin.png");
+	wstring sFilePNG = sImgDir + L"kanryou_kakunin.png";
+	cv::Mat img_kanryou_kakunin_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 	if (MatchImage(img_kanryou_kakunin, img_kanryou_kakunin_ref)) {
 
@@ -372,11 +402,13 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 		// ステータス
 		cv::Mat img_status(img_finish, cv::Rect(230, 180, 80, 20));
-		cv::Mat img_status_ref = cv::imread(sImgDir + "status.png");
+		wstring sFilePNG = sImgDir + L"status.png";
+		cv::Mat img_status_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 		if (MatchImage(img_status, img_status_ref)) {
 			cv::Mat img_status_detail(img_finish, cv::Rect(240, 240, 70, 110));
-			cv::Mat img_status_detail_ref = cv::imread(sImgDir + "status_detail.png");
+			wstring sFilePNG = sImgDir + L"status_detail.png";
+			cv::Mat img_status_detail_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 			if (MatchImage(img_status_detail, img_status_detail_ref)) {
 
@@ -405,12 +437,12 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 			int RECT_RIGHT[2] = { 343, 413 };
 			int RECT_TOP[5] = { 373, 401, 423, 455, 477 };
 
-			const string TEKISEI[8] = { "S", "A", "B", "C", "D", "E", "F", "G" };
+			const wstring TEKISEI[8] = { L"S", L"A", L"B", L"C", L"D", L"E", L"F", L"G" };
 
 			cv::Mat img_tekisei[8];
 			for (int i = 0; i < 8; ++i) {
-				string sRefFile = sImgDir + TEKISEI[i] + ".png";
-				img_tekisei[i] = cv::imread(sRefFile);
+				wstring sRefFile = sImgDir + TEKISEI[i] + L".png";
+				img_tekisei[i] = cv::imread(string(sRefFile.begin(), sRefFile.end()));
 			}
 
 			for (int i = 0; i < 10; ++i) {
@@ -425,22 +457,24 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 	else {
 		cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
-		cv::Mat img_skill_select_ref = cv::imread(sImgDir + "skill_select.png");
+		wstring sFilePNG = sImgDir + L"skill_select.png";
+		cv::Mat img_skill_select_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 		// スキル取得
 		if (MatchImage(img_skill_select, img_skill_select_ref)) {
+
 			cv::Mat img_skill_pt(img_finish, cv::Rect(330, 250, 70, 25));
 
 			int n = GetNumberOCR(img_skill_pt);
 			CString cs;
 			cs.Format(_T("%d"), n);
-			((CEdit*)GetDlgItem(IDC_EDIT_SKILL_PT))->SetWindowText(cs);
+			m_editSkillPt.SetWindowTextW(cs);
 
 			cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 350));
-			cv::Mat img_plus_ref = cv::imread(sImgDir + "plus.png");
+			wstring sFilePNG = sImgDir + L"plus.png";
+			cv::Mat img_plus_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
-			vector<int> viPlusY;
-
+			set<int> siPlusY;
 			for (int i = 0; i < 5; ++i) {
 				cv::Mat result;
 				cv::matchTemplate(img_plus, img_plus_ref, result, cv::TM_CCORR_NORMED);
@@ -452,11 +486,40 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 				if (d < 0.99)
 					break;
 
-				viPlusY.push_back(p.y);
+				siPlusY.insert(p.y);
 
 				cv::Point p1(35, p.y + 35);
 				cv::rectangle(img_plus, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
 			}
+
+
+			for (set<int>::iterator it = siPlusY.begin(); it != siPlusY.end(); ++it) {
+				cv::Mat img_skill(img_finish, cv::Rect(25, *it + 295, 280, 90));
+
+				int jHit = -1;
+				for (int j = 0; j < m_skills.size(); ++j) {
+					if (MatchImage(img_skill, m_skills[j].img)) {
+						jHit = j;
+						break;
+					}
+				}
+				if (jHit > -1) {
+					CString cs;
+					cs.Format(_T("%s"), m_skills[jHit].sName.c_str());
+					if (m_listSkills.FindString(0, cs) < 0) {
+						//MessageBox(cs, _T("hoge"), MB_OK);
+						m_listSkills.AddString(cs);
+					}
+				}
+				else {
+					wstring sFilePNG = sImgDir + L"skills\\unknown.png";
+					cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
+				}
+
+			}
+
 		}
 	}
 }
+
+

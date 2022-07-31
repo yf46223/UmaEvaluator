@@ -7,6 +7,7 @@
 #define IDS_ABOUTBOX                    101
 #define IDD_UMAEVALUATOR_DIALOG         102
 #define IDR_MAINFRAME                   128
+#define IDD_DIALOG_REGISTER_SKILL       131
 #define IDC_BUTTON1                     1000
 #define IDC_BUTTON_DETECT               1000
 #define IDC_COMBO_TURF                  1006
@@ -28,14 +29,15 @@
 #define IDC_COMBO_STAR                  1022
 #define IDC_LIST1                       1023
 #define IDC_LIST_SKILL                  1023
+#define IDC_EDIT_SKILL_NAME             1025
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        131
+#define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1024
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

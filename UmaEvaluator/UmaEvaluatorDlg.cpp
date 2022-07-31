@@ -123,38 +123,61 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 
 	// TODO: 初期化をここに追加します。
 
-	{
-		// スキル情報の読み込み
-		wstring sImgDir = GetImgDir();
-		wstring sSkillDir = sImgDir + L"skills\\";
-		wstring sFileCSV = sSkillDir + L"skills.csv";
-		wifstream ifs(sFileCSV);
-
-		auto Loc = std::locale("Japanese");
-		auto L = ifs.imbue(Loc);
-
-		wstring line;
-		while (getline(ifs, line)) {
-
-			CSkill skill;
-
-			wstringstream iss(line);
-			wstring sIdx, sName;
-			getline(iss, sIdx, L'\t');
-			skill.idx = stoi(sIdx);
-			getline(iss, sName, L'\t');
-			skill.sName = sName;
-			wstring sFilePNG = sSkillDir + sIdx + L".png";
-			skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
-
-			m_skills.push_back(skill);
-		}
-
-		ifs.imbue(L);
-		ifs.close();
-	}
+	ReadSkillCSV();
 
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
+}
+
+void CUmaEvaluatorDlg::ReadSkillCSV()
+{
+	// スキル情報の読み込み
+	wstring sImgDir = GetImgDir();
+	wstring sSkillDir = sImgDir + L"skills\\";
+	wstring sFileCSV = sSkillDir + L"skills.csv";
+	wifstream ifs(sFileCSV);
+
+	auto Loc = locale("Japanese");
+	auto L = ifs.imbue(Loc);
+
+	wstring line;
+	while (getline(ifs, line)) {
+
+		CSkill skill;
+
+		wstringstream iss(line);
+		wstring sIdx, sName;
+		getline(iss, sIdx, L'\t');
+		skill.idx = stoi(sIdx);
+		getline(iss, sName, L'\t');
+		skill.sName = sName;
+		wstring sFilePNG = sSkillDir + sIdx + L".png";
+		skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+		m_skills.push_back(skill);
+	}
+
+	ifs.imbue(L);
+	ifs.close();
+}
+
+void CUmaEvaluatorDlg::SaveSkillCSV()
+{
+	// スキル情報の書き込み
+	wstring sImgDir = GetImgDir();
+	wstring sSkillDir = sImgDir + L"skills\\";
+	wstring sFileCSV = sSkillDir + L"skills.csv";
+	wofstream ofs(sFileCSV);
+
+	auto Loc = locale("Japanese");
+	auto L = ofs.imbue(Loc);
+
+	for (int i = 0; i < m_skills.size(); ++i) {
+		const CSkill& skill = m_skills[i];
+		ofs << skill.idx << "\t" << skill.sName << endl;
+	}
+
+	ofs.imbue(L);
+	ofs.close();
 }
 
 void CUmaEvaluatorDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -296,7 +319,7 @@ double MatchImageRel(const cv::Mat& img, const cv::Mat& img_ref)
 bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref)
 {
 	double d = MatchImageRel(img, img_ref);
-	return (d > 0.99);
+	return (d > 0.995);
 }
 
 
@@ -470,7 +493,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 			cs.Format(_T("%d"), n);
 			m_editSkillPt.SetWindowTextW(cs);
 
-			cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 350));
+			cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 280));
 			wstring sFilePNG = sImgDir + L"plus.png";
 			cv::Mat img_plus_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
@@ -507,13 +530,36 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 					CString cs;
 					cs.Format(_T("%s"), m_skills[jHit].sName.c_str());
 					if (m_listSkills.FindString(0, cs) < 0) {
-						//MessageBox(cs, _T("hoge"), MB_OK);
 						m_listSkills.AddString(cs);
 					}
 				}
 				else {
-					wstring sFilePNG = sImgDir + L"skills\\unknown.png";
-					cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
+					CRegisterSkillDlg dlg;
+					CSkill skill;
+					skill.img = img_skill;
+
+					if (dlg.Setup(skill)) {
+						int idxMax = 0;
+						for (int k = 0; k < m_skills.size(); ++k) {
+							idxMax = max(idxMax, m_skills[k].idx);
+						}
+						skill.idx = idxMax + 1;
+
+						wstring sIdx = to_wstring(skill.idx);
+						wstring sSkillDir = sImgDir + L"skills\\";
+						wstring sFilePNG = sSkillDir + sIdx + L".png";
+						cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
+
+						m_skills.push_back(skill);
+
+						SaveSkillCSV();
+
+						CString cs;
+						cs.Format(_T("%s"), skill.sName.c_str());
+						if (m_listSkills.FindString(0, cs) < 0) {
+							m_listSkills.AddString(cs);
+						}
+					}
 				}
 
 			}

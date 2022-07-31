@@ -8,14 +8,9 @@
 #include <opencv2/text.hpp>
 #include <string>
 
-using namespace std;
+#include "CRegisterSkillDlg.h"
 
-struct CSkill 
-{
-	int idx;
-	wstring sName;
-	cv::Mat img;
-};
+using namespace std;
 
 // CUmaEvaluatorDlg ダイアログ
 class CUmaEvaluatorDlg : public CDialogEx
@@ -40,6 +35,8 @@ private:
 	wstring GetImgDir() { return GetExeDir() + L"img\\"; }
 	int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img);
 	int GetNumberOCR(const cv::Mat& img);
+	void ReadSkillCSV();
+	void SaveSkillCSV();
 
 // 実装
 protected:

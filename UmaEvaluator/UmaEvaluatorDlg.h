@@ -30,13 +30,15 @@ public:
 private:
 	cv::Mat GetDesktopImage();
 	cv::Mat GetUmaWindowImage();
-	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref);
+	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.995);
 	wstring GetExeDir();
 	wstring GetImgDir() { return GetExeDir() + L"img\\"; }
 	int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img);
 	int GetNumberOCR(const cv::Mat& img);
 	void ReadSkillCSV();
 	void SaveSkillCSV();
+	void ReadSkillLv();
+	int GetImageLv(const cv::Mat& img);
 
 // 実装
 protected:
@@ -71,4 +73,5 @@ public:
 
 private:
 	vector<CSkill> m_skills;
+	vector<cv::Mat> m_skillLv;
 };

@@ -124,6 +124,7 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	// TODO: 初期化をここに追加します。
 
 	ReadSkillCSV();
+	ReadSkillLv();
 
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
 }
@@ -158,6 +159,22 @@ void CUmaEvaluatorDlg::ReadSkillCSV()
 
 	ifs.imbue(L);
 	ifs.close();
+}
+
+void CUmaEvaluatorDlg::ReadSkillLv()
+{
+	m_skillLv.clear();
+
+	// スキルレベル画像の読み込み
+	wstring sImgDir = GetImgDir();
+	wstring sSkillDir = sImgDir + L"skills\\";
+
+	for (int i = 0; i < 6; ++i) {
+		wstring si = to_wstring(i);
+		wstring sFilePNG = sSkillDir + L"Lv" + si + L".png";
+		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		m_skillLv.push_back(img);
+	}
 }
 
 void CUmaEvaluatorDlg::SaveSkillCSV()
@@ -311,16 +328,17 @@ double MatchImageRel(const cv::Mat& img, const cv::Mat& img_ref)
 	cv::Mat result;
 	cv::matchTemplate(img, img_ref, result, cv::TM_CCORR_NORMED);
 
-	double d;
-	cv::minMaxLoc(result, &d);
-	return d;
+	double dMin, dMax;
+	cv::minMaxLoc(result, &dMin, &dMax);
+	return dMax;
 }
 
-bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref)
+bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit)
 {
 	double d = MatchImageRel(img, img_ref);
-	return (d > 0.995);
+	return (d > crit);
 }
+
 
 
 wstring CUmaEvaluatorDlg::GetExeDir()
@@ -343,7 +361,7 @@ wstring CUmaEvaluatorDlg::GetExeDir()
 
 int CUmaEvaluatorDlg::GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img)
 {
-	double dMax = DBL_MIN;
+	double dMax = 0.0;
 	int iMax = 9;
 	for (int i = 0; i < 8; ++i) {
 		double d = MatchImageRel(img, img_ref[i]);
@@ -379,6 +397,22 @@ int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img)
 	return n;
 }
 
+int CUmaEvaluatorDlg::GetImageLv(const cv::Mat& img)
+{
+	double dMax = 0.0;
+	int iMax = 0;
+	for (int i = 0; i < m_skillLv.size(); ++i) {
+		double d = MatchImageRel(img, m_skillLv[i]);
+		if (d > dMax) {
+			dMax = d;
+			iMax = i;
+		}
+	}
+
+	return iMax;
+}
+
+
 void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 {
 	const int DEFAULT_WIDTH = 450;
@@ -387,7 +421,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 	wstring sBinDir = GetExeDir();
 	wstring sImgDir = GetImgDir();
 
-	
+
 	cv::Mat img = GetUmaWindowImage();
 	if (img.empty())
 		return;
@@ -515,20 +549,25 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 				cv::rectangle(img_plus, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
 			}
 
-
 			for (set<int>::iterator it = siPlusY.begin(); it != siPlusY.end(); ++it) {
+
+				cv::Mat img_Lv(img_finish, cv::Rect(385, *it + 292, 10, 15));
+				int iLv = GetImageLv(img_Lv);
+
 				cv::Mat img_skill(img_finish, cv::Rect(25, *it + 295, 280, 90));
 
-				int jHit = -1;
-				for (int j = 0; j < m_skills.size(); ++j) {
-					if (MatchImage(img_skill, m_skills[j].img)) {
-						jHit = j;
+				int iHit = -1;
+				for (int i = 0; i < m_skills.size(); ++i) {
+					if (MatchImage(img_skill, m_skills[i].img, 0.999)) {
+						iHit = i;
 						break;
 					}
 				}
-				if (jHit > -1) {
+				if (iHit > -1) {
+					wstring s = m_skills[iHit].sName + L" Lv" + to_wstring(iLv);
+
 					CString cs;
-					cs.Format(_T("%s"), m_skills[jHit].sName.c_str());
+					cs.Format(_T("%s"), s.c_str());
 					if (m_listSkills.FindString(0, cs) < 0) {
 						m_listSkills.AddString(cs);
 					}
@@ -554,13 +593,19 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 						SaveSkillCSV();
 
+						wstring s = skill.sName + L" Lv" + to_wstring(iLv);
+
 						CString cs;
-						cs.Format(_T("%s"), skill.sName.c_str());
+						cs.Format(_T("%s"), s.c_str());
 						if (m_listSkills.FindString(0, cs) < 0) {
 							m_listSkills.AddString(cs);
 						}
 					}
 				}
+
+
+
+
 
 			}
 

@@ -542,13 +542,34 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 			m_editSkillPt.SetWindowTextW(cs);
 
 			cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 280));
+
 			wstring sFilePNG = sImgDir + L"plus.png";
 			cv::Mat img_plus_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+			sFilePNG = sImgDir + L"plus_gold.png";
+			cv::Mat img_plus_glod_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 			set<int> siPlusY;
 			for (int i = 0; i < 5; ++i) {
 				cv::Mat result;
 				cv::matchTemplate(img_plus, img_plus_ref, result, cv::TM_CCORR_NORMED);
+
+				double d;
+				cv::Point p;
+				cv::minMaxLoc(result, NULL, &d, NULL, &p);
+
+				if (d < 0.99)
+					break;
+
+				siPlusY.insert(p.y);
+
+				cv::Point p1(35, p.y + 35);
+				cv::rectangle(img_plus, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
+			}
+
+			for (int i = 0; i < 5; ++i) {
+				cv::Mat result;
+				cv::matchTemplate(img_plus, img_plus_glod_ref, result, cv::TM_CCORR_NORMED);
 
 				double d;
 				cv::Point p;
@@ -617,13 +638,34 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 	}
 
 	cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 280));
+
 	sFilePNG = sImgDir + L"plus.png";
 	cv::Mat img_plus_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+	sFilePNG = sImgDir + L"plus_gold.png";
+	cv::Mat img_plus_gold_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 	set<int> siPlusY;
 	for (int i = 0; i < 5; ++i) {
 		cv::Mat result;
 		cv::matchTemplate(img_plus, img_plus_ref, result, cv::TM_CCORR_NORMED);
+
+		double d;
+		cv::Point p;
+		cv::minMaxLoc(result, NULL, &d, NULL, &p);
+
+		if (d < 0.99)
+			break;
+
+		siPlusY.insert(p.y);
+
+		cv::Point p1(35, p.y + 35);
+		cv::rectangle(img_plus, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
+	}
+
+	for (int i = 0; i < 5; ++i) {
+		cv::Mat result;
+		cv::matchTemplate(img_plus, img_plus_gold_ref, result, cv::TM_CCORR_NORMED);
 
 		double d;
 		cv::Point p;

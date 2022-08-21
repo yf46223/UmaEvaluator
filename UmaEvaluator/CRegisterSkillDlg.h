@@ -23,6 +23,7 @@ public:
 
 private:
 	wstring m_sName;
+	int  m_nPt;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV サポート
@@ -31,4 +32,5 @@ protected:
 public:
 	CEdit m_editSkillName;
 	afx_msg void OnBnClickedOk();
+	CEdit m_editPt;
 };

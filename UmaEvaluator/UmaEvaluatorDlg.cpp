@@ -651,11 +651,11 @@ void CUmaEvaluatorDlg::UpdateSkillCandidateList()
 		const wstring& ws = skill.sName;
 		int iLv = m_viSkillsCandidate[i].second;
 		int nPt = skill.nPt;
-		if (iLv == 1) nPt *= 0.9;
-		if (iLv == 2) nPt *= 0.8;
-		if (iLv == 3) nPt *= 0.7;
-		if (iLv == 4) nPt *= 0.65;
-		if (iLv == 5) nPt *= 0.6;
+		if (iLv == 1) nPt = int(nPt * 0.9);
+		if (iLv == 2) nPt = int(nPt * 0.8);
+		if (iLv == 3) nPt = int(nPt * 0.7);
+		if (iLv == 4) nPt = int(nPt * 0.65);
+		if (iLv == 5) nPt = int(nPt * 0.6);
 
 		m_listCtrlSkills.InsertItem(i, WS2CS(ws));
 		m_listCtrlSkills.SetItemText(i, 1, Int2CS(iLv));

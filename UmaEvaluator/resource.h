@@ -33,6 +33,8 @@
 #define IDC_EDIT_SKILL_NAME             1025
 #define IDC_LIST2                       1026
 #define IDC_LIST_CTRL_SKILL             1026
+#define IDC_EDIT_SKILL_NAME2            1026
+#define IDC_EDIT_PT                     1026
 
 // Next default values for new objects
 // 

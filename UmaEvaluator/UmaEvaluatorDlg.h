@@ -39,6 +39,7 @@ private:
 	void SaveSkillCSV();
 	void ReadSkillLv();
 	int GetImageLv(const cv::Mat& img);
+	int GetImageSkill(const cv::Mat& img);
 
 // 実装
 protected:

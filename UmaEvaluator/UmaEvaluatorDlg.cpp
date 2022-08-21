@@ -413,6 +413,24 @@ int CUmaEvaluatorDlg::GetImageLv(const cv::Mat& img)
 	return iMax;
 }
 
+int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img)
+{
+	cv::Mat img_title(img, cv::Rect(60, 5, 100, 15));
+
+	double dMax = 0.0;
+	int iMax = -1;
+	for (int i = 0; i < m_skills.size(); ++i) {
+		cv::Mat img_title_ref(m_skills[i].img, cv::Rect(60, 5, 100, 15));
+		double d = MatchImageRel(img_title, img_title_ref);
+		if (d > max(dMax, 0.98) ) {
+			dMax = d;
+			iMax = i;
+		}
+	}
+
+	return iMax;
+}
+
 
 void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 {
@@ -429,11 +447,6 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 	cv::Mat img_finish;
 	cv::resize(img, img_finish, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
-
-	//wstring sFilePNG = sImgDir + L"skill_bakushin1.png";
-	//wstring sFilePNG = sImgDir + L"finish_spe.png";
-
-	//cv::Mat img_finish = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 	// 育成完了確認
 	cv::Mat img_kanryou_kakunin(img_finish, cv::Rect(15, 5, 90, 15));
@@ -552,26 +565,22 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 			for (set<int>::iterator it = siPlusY.begin(); it != siPlusY.end(); ++it) {
 
+				cv::Mat img_skill(img_finish, cv::Rect(25, *it + 295, 280, 90));
+
+				int iSkill = GetImageSkill(img_skill);
+
+				if (iSkill < 0)
+					continue;
+
 				cv::Mat img_Lv(img_finish, cv::Rect(385, *it + 292, 10, 15));
 				int iLv = GetImageLv(img_Lv);
 
-				cv::Mat img_skill(img_finish, cv::Rect(25, *it + 295, 280, 90));
+				wstring s = m_skills[iSkill].sName + L" Lv" + to_wstring(iLv);
 
-				int iHit = -1;
-				for (int i = 0; i < m_skills.size(); ++i) {
-					if (MatchImage(img_skill, m_skills[i].img, 0.995)) {
-						iHit = i;
-						break;
-					}
-				}
-				if (iHit > -1) {
-					wstring s = m_skills[iHit].sName + L" Lv" + to_wstring(iLv);
-
-					CString cs;
-					cs.Format(_T("%s"), s.c_str());
-					if (m_listSkills.FindString(0, cs) < 0) {
-						m_listSkills.AddString(cs);
-					}
+				CString cs;
+				cs.Format(_T("%s"), s.c_str());
+				if (m_listSkills.FindString(0, cs) < 0) {
+					m_listSkills.AddString(cs);
 				}
 			}
 		}

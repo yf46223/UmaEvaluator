@@ -9,10 +9,11 @@ class CSkill
 {
 public:
 	int idx;
+	int nPt;
 	wstring sName;
 	cv::Mat img;
 
 public:
-	CSkill() : idx(0) {}
+	CSkill() : idx(0), nPt(0) {}
 };
 

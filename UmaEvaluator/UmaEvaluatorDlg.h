@@ -41,6 +41,15 @@ private:
 	int GetImageLv(const cv::Mat& img);
 	int GetImageSkill(const cv::Mat& img);
 	vector<pair<cv::Mat, bool> > GetSkillImages(const cv::Mat img_finish);
+	CString WS2CS(const wstring& ws);
+	CString Int2CS(int n);
+	void UpdateSkillCandidateList();
+
+private:
+	vector<CSkill> m_skills;
+	vector<cv::Mat> m_skillLv;
+
+	vector<pair<int, int> > m_viSkillsCandidate;
 
 // 実装
 protected:
@@ -55,7 +64,6 @@ protected:
 public:
 	afx_msg void OnBnClickedButtonDetect();
 	afx_msg void OnBnClickedButtonSkillRegistration();
-	CListBox m_listSkills;
 	CComboBox m_comboStar;
 	CEdit m_editSpeed;
 	CEdit m_editStamina;
@@ -73,8 +81,5 @@ public:
 	CComboBox m_comboSashi;
 	CComboBox m_comboOikomi;
 	CEdit m_editSkillPt;
-
-private:
-	vector<CSkill> m_skills;
-	vector<cv::Mat> m_skillLv;
+	CListCtrl m_listCtrlSkills;
 };

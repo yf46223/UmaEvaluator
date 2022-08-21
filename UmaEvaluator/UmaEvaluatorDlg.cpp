@@ -62,7 +62,6 @@ CUmaEvaluatorDlg::CUmaEvaluatorDlg(CWnd* pParent /*=nullptr*/)
 void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_LIST_SKILL, m_listSkills);
 	DDX_Control(pDX, IDC_COMBO_STAR, m_comboStar);
 	DDX_Control(pDX, IDC_EDIT_SPEED, m_editSpeed);
 	DDX_Control(pDX, IDC_EDIT_STAMINA, m_editStamina);
@@ -80,6 +79,7 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_SASHI, m_comboSashi);
 	DDX_Control(pDX, IDC_COMBO_OIKOMI, m_comboOikomi);
 	DDX_Control(pDX, IDC_EDIT_SKILL_PT, m_editSkillPt);
+	DDX_Control(pDX, IDC_LIST_CTRL_SKILL, m_listCtrlSkills);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -124,6 +124,10 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 
 	// TODO: 初期化をここに追加します。
 
+	m_listCtrlSkills.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 100);
+	m_listCtrlSkills.InsertColumn(1, L"ヒントLv", LVCFMT_LEFT, 50);
+	m_listCtrlSkills.InsertColumn(2, L"取得Pt"  , LVCFMT_LEFT, 50);
+
 	ReadSkillCSV();
 	ReadSkillLv();
 
@@ -147,9 +151,11 @@ void CUmaEvaluatorDlg::ReadSkillCSV()
 		CSkill skill;
 
 		wstringstream iss(line);
-		wstring sIdx, sName;
+		wstring sIdx, sPt, sName;
 		getline(iss, sIdx, L'\t');
 		skill.idx = stoi(sIdx);
+		getline(iss, sPt, L'\t');
+		skill.nPt = stoi(sPt);
 		getline(iss, sName, L'\t');
 		skill.sName = sName;
 		wstring sFilePNG = sSkillDir + sIdx + L".png";
@@ -487,6 +493,21 @@ vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_
 	return vImages;
 }
 
+CString CUmaEvaluatorDlg::WS2CS(const wstring& ws)
+{
+	CString cs;
+	cs.Format(_T("%s"), ws.c_str());
+	return cs;
+}
+
+CString CUmaEvaluatorDlg::Int2CS(int n)
+{
+	CString cs;
+	cs.Format(_T("%d"), n);
+	m_editSkillPt.SetWindowTextW(cs);
+	return cs;
+}
+
 void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 {
 	const int DEFAULT_WIDTH = 450;
@@ -548,9 +569,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 					int n = GetNumberOCR(img);
 
-					CString cs;
-					cs.Format(_T("%d"), n);
-					edits[i]->SetWindowTextW(cs);
+					edits[i]->SetWindowTextW(Int2CS(n));
 				}
 			}
 
@@ -592,38 +611,57 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 			cv::Mat img_skill_pt(img_finish, cv::Rect(330, 250, 70, 25));
 
 			int n = GetNumberOCR(img_skill_pt);
-			CString cs;
-			cs.Format(_T("%d"), n);
-			m_editSkillPt.SetWindowTextW(cs);
+			m_editSkillPt.SetWindowTextW(Int2CS(n));
 
 			vector<pair<cv::Mat, bool> > vImages = GetSkillImages(img_finish);
 
 			for (int i = 0; i < vImages.size(); ++i) {
 
 				const cv::Mat& img_skill_frame = vImages[i].first;
-
 				cv::Mat img_skill(img_skill_frame, cv::Rect(5, 5, 280, 90));
 
 				int iSkill = GetImageSkill(img_skill);
-
 				if (iSkill < 0)
 					continue;
 
 				cv::Mat img_Lv(img_skill_frame, cv::Rect(365, 2, 10, 15));
 				int iLv = GetImageLv(img_Lv);
 
-				wstring s = m_skills[iSkill].sName + L" Lv" + to_wstring(iLv);
-
-				CString cs;
-				cs.Format(_T("%s"), s.c_str());
-				if (m_listSkills.FindString(0, cs) < 0) {
-					m_listSkills.AddString(cs);
+				bool bFound = false;
+				for (int j = 0; j < m_viSkillsCandidate.size(); ++j) {
+					if (m_viSkillsCandidate[j].first == iSkill) {
+						bFound = true;
+						break;
+					}
+				}
+				if (!bFound) {
+					m_viSkillsCandidate.push_back(pair<int, int>(iSkill, iLv));
 				}
 			}
+			UpdateSkillCandidateList();
 		}
 	}
 }
 
+void CUmaEvaluatorDlg::UpdateSkillCandidateList()
+{
+	m_listCtrlSkills.DeleteAllItems();
+	for (int i = 0; i < m_viSkillsCandidate.size(); ++i) {
+		const CSkill& skill = m_skills[m_viSkillsCandidate[i].first];
+		const wstring& ws = skill.sName;
+		int iLv = m_viSkillsCandidate[i].second;
+		int nPt = skill.nPt;
+		if (iLv == 1) nPt *= 0.9;
+		if (iLv == 2) nPt *= 0.8;
+		if (iLv == 3) nPt *= 0.7;
+		if (iLv == 4) nPt *= 0.65;
+		if (iLv == 5) nPt *= 0.6;
+
+		m_listCtrlSkills.InsertItem(i, WS2CS(ws));
+		m_listCtrlSkills.SetItemText(i, 1, Int2CS(iLv));
+		m_listCtrlSkills.SetItemText(i, 2, Int2CS(nPt));
+	}
+}
 
 void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 {

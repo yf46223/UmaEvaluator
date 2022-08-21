@@ -40,6 +40,7 @@ private:
 	void ReadSkillLv();
 	int GetImageLv(const cv::Mat& img);
 	int GetImageSkill(const cv::Mat& img);
+	vector<pair<cv::Mat, bool> > GetSkillImages(const cv::Mat img_finish);
 
 // 実装
 protected:

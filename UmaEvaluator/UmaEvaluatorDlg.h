@@ -52,6 +52,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedButtonDetect();
+	afx_msg void OnBnClickedButtonSkillRegistration();
 	CListBox m_listSkills;
 	CComboBox m_comboStar;
 	CEdit m_editSpeed;

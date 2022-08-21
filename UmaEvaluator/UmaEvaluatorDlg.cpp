@@ -87,6 +87,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_DETECT, &CUmaEvaluatorDlg::OnBnClickedButtonDetect)
+	ON_BN_CLICKED(IDC_BUTTON_SKILL_REGISTRATION, &CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration)
 END_MESSAGE_MAP()
 
 
@@ -558,7 +559,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 				int iHit = -1;
 				for (int i = 0; i < m_skills.size(); ++i) {
-					if (MatchImage(img_skill, m_skills[i].img, 0.999)) {
+					if (MatchImage(img_skill, m_skills[i].img, 0.995)) {
 						iHit = i;
 						break;
 					}
@@ -572,45 +573,106 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 						m_listSkills.AddString(cs);
 					}
 				}
-				else {
-					CRegisterSkillDlg dlg;
-					CSkill skill;
-					skill.img = img_skill;
-
-					if (dlg.Setup(skill)) {
-						int idxMax = 0;
-						for (int k = 0; k < m_skills.size(); ++k) {
-							idxMax = max(idxMax, m_skills[k].idx);
-						}
-						skill.idx = idxMax + 1;
-
-						wstring sIdx = to_wstring(skill.idx);
-						wstring sSkillDir = sImgDir + L"skills\\";
-						wstring sFilePNG = sSkillDir + sIdx + L".png";
-						cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
-
-						m_skills.push_back(skill);
-
-						SaveSkillCSV();
-
-						wstring s = skill.sName + L" Lv" + to_wstring(iLv);
-
-						CString cs;
-						cs.Format(_T("%s"), s.c_str());
-						if (m_listSkills.FindString(0, cs) < 0) {
-							m_listSkills.AddString(cs);
-						}
-					}
-				}
-
-
-
-
-
 			}
-
 		}
 	}
 }
 
 
+
+
+void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
+{
+	const int DEFAULT_WIDTH = 450;
+	const int DEFAULT_HEIGHT = 800;
+
+	wstring sBinDir = GetExeDir();
+	wstring sImgDir = GetImgDir();
+
+
+	cv::Mat img = GetUmaWindowImage();
+	if (img.empty())
+		return;
+
+	cv::Mat img_finish;
+	cv::resize(img, img_finish, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+
+	cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
+	wstring sFilePNG = sImgDir + L"skill_select.png";
+	cv::Mat img_skill_select_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+	// スキル取得
+	if (!MatchImage(img_skill_select, img_skill_select_ref)) {
+		MessageBox(L"スキル取得画面を表示してください。");
+		return;
+	}
+
+	cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 280));
+	sFilePNG = sImgDir + L"plus.png";
+	cv::Mat img_plus_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+	set<int> siPlusY;
+	for (int i = 0; i < 5; ++i) {
+		cv::Mat result;
+		cv::matchTemplate(img_plus, img_plus_ref, result, cv::TM_CCORR_NORMED);
+
+		double d;
+		cv::Point p;
+		cv::minMaxLoc(result, NULL, &d, NULL, &p);
+
+		if (d < 0.99)
+			break;
+
+		siPlusY.insert(p.y);
+
+		cv::Point p1(35, p.y + 35);
+		cv::rectangle(img_plus, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
+	}
+
+	for (set<int>::iterator it = siPlusY.begin(); it != siPlusY.end(); ++it) {
+
+		cv::Mat img_Lv(img_finish, cv::Rect(385, *it + 292, 10, 15));
+		int iLv = GetImageLv(img_Lv);
+
+		cv::Mat img_skill(img_finish, cv::Rect(25, *it + 295, 280, 90));
+
+		CRegisterSkillDlg dlg;
+		CSkill skill;
+		skill.img = img_skill;
+
+		if (dlg.Setup(skill)) {
+			int kDup = -1;
+			for (int k = 0; k < m_skills.size(); ++k) {
+				if (m_skills[k].sName == skill.sName) {
+					kDup = k;
+					break;
+				}
+			}
+			if (kDup > -1) {
+				int n = MessageBox(L"同名のスキルが存在します。上書きしますか？", L"スキル登録", MB_YESNO);
+				if (n != IDYES) {
+					continue;
+				}
+
+				skill.idx = m_skills[kDup].idx;
+				m_skills[kDup] = skill;
+			}
+			else {
+				int idxMax = 0;
+				for (int k = 0; k < m_skills.size(); ++k) {
+					idxMax = max(idxMax, m_skills[k].idx);
+				}
+				skill.idx = idxMax + 1;
+
+				m_skills.push_back(skill);
+			}
+
+			wstring sIdx = to_wstring(skill.idx);
+			wstring sSkillDir = sImgDir + L"skills\\";
+			wstring sFilePNG = sSkillDir + sIdx + L".png";
+			cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
+
+			SaveSkillCSV();
+		}
+	}
+}

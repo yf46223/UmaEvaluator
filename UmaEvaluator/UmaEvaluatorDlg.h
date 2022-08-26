@@ -52,19 +52,22 @@ private:
 	wstring GetImgDir() { return GetExeDir() + L"img\\"; }
 	int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img);
 	int GetNumberOCR(const cv::Mat& img);
-	void ReadSkillCSV();
-	void SaveSkillCSV();
+	void ReadSkillTSV();
+	void SaveSkillTSV();
 	void ReadSkillLv();
+	void ReadStatusPointTSV();
 	int GetImageLv(const cv::Mat& img);
 	int GetImageSkill(const cv::Mat& img);
 	vector<pair<cv::Mat, bool> > GetSkillImages(const cv::Mat img_finish);
 	CString WS2CS(const wstring& ws);
 	CString Int2CS(int n);
 	void UpdateSkillList();
+	void UpdateStatusPoint();
 
 private:
 	vector<CSkill> m_skills;
 	vector<cv::Mat> m_skillLv;
+	vector<int> m_vnStatusPoint;
 
 	vector<CSkillItem> m_vSkills;
 	bool m_bOnUpdateSkillList;
@@ -106,4 +109,10 @@ public:
 	afx_msg void OnBnClickedButtonToObtain();
 	afx_msg void OnLvnItemchangedListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedButtonToCandidate();
+	afx_msg void OnEnChangeEditSpeed();
+	afx_msg void OnEnChangeEditStamina();
+	afx_msg void OnEnChangeEditPower();
+	afx_msg void OnEnChangeEditKonjou();
+	afx_msg void OnEnChangeEditKashikosa();
+	CStatic m_stStatusPoint;
 };

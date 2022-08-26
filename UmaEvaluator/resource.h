@@ -38,6 +38,8 @@
 #define IDC_LIST_CTRL_SKILL_CANDIDATE   1027
 #define IDC_BUTTON_TO_OBTAIN            1028
 #define IDC_BUTTON_TO_CANDIDATE         1029
+#define IDC_STATIC_STATUS_POTIN         1030
+#define IDC_STATIC_STATUS_POINT         1030
 
 // Next default values for new objects
 // 
@@ -45,7 +47,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1029
+#define _APS_NEXT_CONTROL_VALUE         1031
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

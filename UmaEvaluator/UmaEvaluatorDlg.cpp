@@ -81,6 +81,7 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_SKILL_PT, m_editSkillPt);
 	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_OBTAIN, m_listCtrlSkillObtain);
 	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_CANDIDATE, m_listCtrlSkillCandidate);
+	DDX_Control(pDX, IDC_STATIC_STATUS_POINT, m_stStatusPoint);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -94,6 +95,11 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_TO_OBTAIN, &CUmaEvaluatorDlg::OnBnClickedButtonToObtain)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillObtain)
 	ON_BN_CLICKED(IDC_BUTTON_TO_CANDIDATE, &CUmaEvaluatorDlg::OnBnClickedButtonToCandidate)
+	ON_EN_CHANGE(IDC_EDIT_SPEED, &CUmaEvaluatorDlg::OnEnChangeEditSpeed)
+	ON_EN_CHANGE(IDC_EDIT_STAMINA, &CUmaEvaluatorDlg::OnEnChangeEditStamina)
+	ON_EN_CHANGE(IDC_EDIT_POWER, &CUmaEvaluatorDlg::OnEnChangeEditPower)
+	ON_EN_CHANGE(IDC_EDIT_KONJOU, &CUmaEvaluatorDlg::OnEnChangeEditKonjou)
+	ON_EN_CHANGE(IDC_EDIT_KASHIKOSA, &CUmaEvaluatorDlg::OnEnChangeEditKashikosa)
 END_MESSAGE_MAP()
 
 
@@ -140,19 +146,20 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	m_listCtrlSkillObtain.InsertColumn(2, L"取得Pt", LVCFMT_LEFT, 50);
 	m_listCtrlSkillObtain.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	ReadSkillCSV();
+	ReadSkillTSV();
 	ReadSkillLv();
+	ReadStatusPointTSV();
 
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
 }
 
-void CUmaEvaluatorDlg::ReadSkillCSV()
+void CUmaEvaluatorDlg::ReadSkillTSV()
 {
 	// スキル情報の読み込み
 	wstring sImgDir = GetImgDir();
 	wstring sSkillDir = sImgDir + L"skills\\";
-	wstring sFileCSV = sSkillDir + L"skills.csv";
-	wifstream ifs(sFileCSV);
+	wstring sFileTSV = sSkillDir + L"skills.txt";
+	wifstream ifs(sFileTSV);
 
 	auto Loc = locale("Japanese");
 	auto L = ifs.imbue(Loc);
@@ -196,13 +203,13 @@ void CUmaEvaluatorDlg::ReadSkillLv()
 	}
 }
 
-void CUmaEvaluatorDlg::SaveSkillCSV()
+void CUmaEvaluatorDlg::SaveSkillTSV()
 {
 	// スキル情報の書き込み
 	wstring sImgDir = GetImgDir();
 	wstring sSkillDir = sImgDir + L"skills\\";
-	wstring sFileCSV = sSkillDir + L"skills.csv";
-	wofstream ofs(sFileCSV);
+	wstring sFileTSV = sSkillDir + L"skills.txt";
+	wofstream ofs(sFileTSV);
 
 	auto Loc = locale("Japanese");
 	auto L = ofs.imbue(Loc);
@@ -214,6 +221,38 @@ void CUmaEvaluatorDlg::SaveSkillCSV()
 
 	ofs.imbue(L);
 	ofs.close();
+}
+
+void CUmaEvaluatorDlg::ReadStatusPointTSV()
+{
+	m_vnStatusPoint.resize(1201);
+
+	wstring sImgDir = GetImgDir();
+	wstring sFileTSV = sImgDir + L"status_point.txt";
+	wifstream ifs(sFileTSV);
+
+	auto Loc = locale("Japanese");
+	auto L = ifs.imbue(Loc);
+
+	wstring line;
+	while (getline(ifs, line)) {
+
+		CSkill skill;
+
+		wstringstream iss(line);
+		wstring s;
+		getline(iss, s, L'\t');
+		int i = stoi(s);
+		getline(iss, s, L'\t');
+		int nPt = stoi(s);
+
+		if (0 <= i && i <= 1200) {
+			m_vnStatusPoint[i] = nPt;
+		}
+	}
+
+	ifs.imbue(L);
+	ifs.close();
 }
 
 void CUmaEvaluatorDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -766,7 +805,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 			wstring sFilePNG = sSkillDir + sIdx + L".png";
 			cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
 
-			SaveSkillCSV();
+			SaveSkillTSV();
 		}
 	}
 }
@@ -866,4 +905,54 @@ void CUmaEvaluatorDlg::OnBnClickedButtonToCandidate()
 		}
 	}
 	UpdateSkillList();
+}
+
+
+void CUmaEvaluatorDlg::OnEnChangeEditSpeed()
+{
+	UpdateStatusPoint();
+}
+
+
+
+void CUmaEvaluatorDlg::OnEnChangeEditStamina()
+{
+	UpdateStatusPoint();
+}
+
+
+void CUmaEvaluatorDlg::OnEnChangeEditPower()
+{
+	UpdateStatusPoint();
+}
+
+
+void CUmaEvaluatorDlg::OnEnChangeEditKonjou()
+{
+	UpdateStatusPoint();
+}
+
+
+void CUmaEvaluatorDlg::OnEnChangeEditKashikosa()
+{
+	UpdateStatusPoint();
+}
+
+void CUmaEvaluatorDlg::UpdateStatusPoint()
+{
+	int nPt = 0;
+
+	CEdit* edits[5] = { &m_editSpeed, &m_editStamina, &m_editPower, &m_editKonjou, &m_editKashikosa };
+	for (int i = 0; i < 5; ++i) {
+		CString cs;
+		edits[i]->GetWindowTextW(cs);
+		int n = _ttoi(cs);
+
+		if (0 <= n && n <= 1200) {
+			nPt += m_vnStatusPoint[n];
+		}
+	}
+
+	m_stStatusPoint.SetWindowTextW(L"ステータス評価点：" + Int2CS(nPt));
+
 }

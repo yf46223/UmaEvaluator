@@ -79,7 +79,8 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_SASHI, m_comboSashi);
 	DDX_Control(pDX, IDC_COMBO_OIKOMI, m_comboOikomi);
 	DDX_Control(pDX, IDC_EDIT_SKILL_PT, m_editSkillPt);
-	DDX_Control(pDX, IDC_LIST_CTRL_SKILL, m_listCtrlSkills);
+	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_OBTAIN, m_listCtrlSkillObtain);
+	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_CANDIDATE, m_listCtrlSkillCandidate);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -88,6 +89,8 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_DETECT, &CUmaEvaluatorDlg::OnBnClickedButtonDetect)
 	ON_BN_CLICKED(IDC_BUTTON_SKILL_REGISTRATION, &CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_CTRL_SKILL_CANDIDATE, &CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillCandidate)
+	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_CTRL_SKILL_CANDIDATE, &CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate)
 END_MESSAGE_MAP()
 
 
@@ -124,9 +127,15 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 
 	// TODO: 初期化をここに追加します。
 
-	m_listCtrlSkills.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 100);
-	m_listCtrlSkills.InsertColumn(1, L"ヒントLv", LVCFMT_LEFT, 50);
-	m_listCtrlSkills.InsertColumn(2, L"取得Pt"  , LVCFMT_LEFT, 50);
+	m_listCtrlSkillCandidate.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 100);
+	m_listCtrlSkillCandidate.InsertColumn(1, L"ヒントLv", LVCFMT_LEFT, 50);
+	m_listCtrlSkillCandidate.InsertColumn(2, L"取得Pt"  , LVCFMT_LEFT, 50);
+	m_listCtrlSkillCandidate.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+
+	m_listCtrlSkillObtain.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 100);
+	m_listCtrlSkillObtain.InsertColumn(1, L"ヒントLv", LVCFMT_LEFT, 50);
+	m_listCtrlSkillObtain.InsertColumn(2, L"取得Pt", LVCFMT_LEFT, 50);
+	m_listCtrlSkillObtain.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
 	ReadSkillCSV();
 	ReadSkillLv();
@@ -197,7 +206,7 @@ void CUmaEvaluatorDlg::SaveSkillCSV()
 
 	for (int i = 0; i < m_skills.size(); ++i) {
 		const CSkill& skill = m_skills[i];
-		ofs << skill.idx << "\t" << skill.sName << endl;
+		ofs << skill.idx << "\t" << skill.nPt << "\t" << skill.sName << endl;
 	}
 
 	ofs.imbue(L);
@@ -504,7 +513,6 @@ CString CUmaEvaluatorDlg::Int2CS(int n)
 {
 	CString cs;
 	cs.Format(_T("%d"), n);
-	m_editSkillPt.SetWindowTextW(cs);
 	return cs;
 }
 
@@ -628,28 +636,29 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 				int iLv = GetImageLv(img_Lv);
 
 				bool bFound = false;
-				for (int j = 0; j < m_viSkillsCandidate.size(); ++j) {
-					if (m_viSkillsCandidate[j].first == iSkill) {
+				for (int j = 0; j < m_vSkills.size(); ++j) {
+					if (m_vSkills[j].iSkill == iSkill) {
 						bFound = true;
 						break;
 					}
 				}
 				if (!bFound) {
-					m_viSkillsCandidate.push_back(pair<int, int>(iSkill, iLv));
+					m_vSkills.push_back(CSkillItem(iSkill, iLv));
 				}
 			}
-			UpdateSkillCandidateList();
+			UpdateSkillList();
 		}
 	}
 }
 
-void CUmaEvaluatorDlg::UpdateSkillCandidateList()
+void CUmaEvaluatorDlg::UpdateSkillList()
 {
-	m_listCtrlSkills.DeleteAllItems();
-	for (int i = 0; i < m_viSkillsCandidate.size(); ++i) {
-		const CSkill& skill = m_skills[m_viSkillsCandidate[i].first];
+	m_listCtrlSkillCandidate.DeleteAllItems();
+	m_listCtrlSkillObtain.DeleteAllItems();
+	for (int i = 0; i < m_vSkills.size(); ++i) {
+		const CSkill& skill = m_skills[m_vSkills[i].iSkill];
 		const wstring& ws = skill.sName;
-		int iLv = m_viSkillsCandidate[i].second;
+		int iLv = m_vSkills[i].iLv;
 		int nPt = skill.nPt;
 		if (iLv == 1) nPt = int(nPt * 0.9);
 		if (iLv == 2) nPt = int(nPt * 0.8);
@@ -657,10 +666,18 @@ void CUmaEvaluatorDlg::UpdateSkillCandidateList()
 		if (iLv == 4) nPt = int(nPt * 0.65);
 		if (iLv == 5) nPt = int(nPt * 0.6);
 
-		m_listCtrlSkills.InsertItem(i, WS2CS(ws));
-		m_listCtrlSkills.SetItemText(i, 1, Int2CS(iLv));
-		m_listCtrlSkills.SetItemText(i, 2, Int2CS(nPt));
+		if (m_vSkills[i].bObtain) {
+			m_listCtrlSkillObtain.InsertItem(i, WS2CS(ws));
+			m_listCtrlSkillObtain.SetItemText(i, 1, Int2CS(iLv));
+			m_listCtrlSkillObtain.SetItemText(i, 2, Int2CS(nPt));
+		}
+		else {
+			m_listCtrlSkillCandidate.InsertItem(i, WS2CS(ws));
+			m_listCtrlSkillCandidate.SetItemText(i, 1, Int2CS(iLv));
+			m_listCtrlSkillCandidate.SetItemText(i, 2, Int2CS(nPt));
+		}
 	}
+
 }
 
 void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
@@ -735,4 +752,52 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 			SaveSkillCSV();
 		}
 	}
+}
+
+
+void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	// TODO: ここにコントロール通知ハンドラー コードを追加します。
+
+	set<int> siSelected;
+
+	POSITION pos = m_listCtrlSkillCandidate.GetFirstSelectedItemPosition();
+	while (pos)
+	{
+		int nItem = m_listCtrlSkillCandidate.GetNextSelectedItem(pos);
+		siSelected.insert(nItem);
+	}
+
+	int iCandidate = -1;
+	for (int i = 0; i < m_vSkills.size(); ++i) {
+		if (m_vSkills[i].bObtain)
+			continue;
+		++iCandidate;
+		m_vSkills[i].bSelected = (siSelected.find(iCandidate) != siSelected.end());
+	}
+
+	*pResult = 0;
+}
+
+
+void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
+	// TODO: ここにコントロール通知ハンドラー コードを追加します。
+
+	if (pLVKeyDow->wVKey == VK_DELETE)
+	{
+		vector<CSkillItem> skillsNew;
+		for (int i = 0; i <  m_vSkills.size(); ++i) {
+			if (m_vSkills[i].bObtain || !m_vSkills[i].bSelected) {
+				skillsNew.push_back(m_vSkills[i]);
+			}
+		}
+		m_vSkills = skillsNew;
+
+		UpdateSkillList();
+	}
+
+	*pResult = 0;
 }

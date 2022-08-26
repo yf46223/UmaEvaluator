@@ -12,6 +12,23 @@
 
 using namespace std;
 
+struct CSkillItem
+{
+	CSkillItem() : iSkill(0), iLv(0), bObtain(false), bSelected(false)
+	{
+	}
+
+	CSkillItem(int iSkill_, int iLv_) : iSkill(iSkill_), iLv(iLv_), bObtain(false), bSelected(false)
+	{
+	}
+
+public:
+	int iSkill;
+	int iLv;
+	bool bObtain;
+	bool bSelected;
+};
+
 // CUmaEvaluatorDlg ダイアログ
 class CUmaEvaluatorDlg : public CDialogEx
 {
@@ -43,13 +60,13 @@ private:
 	vector<pair<cv::Mat, bool> > GetSkillImages(const cv::Mat img_finish);
 	CString WS2CS(const wstring& ws);
 	CString Int2CS(int n);
-	void UpdateSkillCandidateList();
+	void UpdateSkillList();
 
 private:
 	vector<CSkill> m_skills;
 	vector<cv::Mat> m_skillLv;
 
-	vector<pair<int, int> > m_viSkillsCandidate;
+	vector<CSkillItem> m_vSkills;
 
 // 実装
 protected:
@@ -81,5 +98,8 @@ public:
 	CComboBox m_comboSashi;
 	CComboBox m_comboOikomi;
 	CEdit m_editSkillPt;
-	CListCtrl m_listCtrlSkills;
+	CListCtrl m_listCtrlSkillObtain;
+	CListCtrl m_listCtrlSkillCandidate;
+	afx_msg void OnLvnItemchangedListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
 };

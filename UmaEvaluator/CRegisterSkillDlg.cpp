@@ -70,6 +70,8 @@ void CRegisterSkillDlg::OnBnClickedOk()
             MessageBox(L"スキル名を入力してください。");
             return;
         }
+
+        m_sName = sName;
     }
 
     {

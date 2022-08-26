@@ -67,6 +67,7 @@ private:
 	vector<cv::Mat> m_skillLv;
 
 	vector<CSkillItem> m_vSkills;
+	bool m_bOnUpdateSkillList;
 
 // 実装
 protected:
@@ -102,4 +103,7 @@ public:
 	CListCtrl m_listCtrlSkillCandidate;
 	afx_msg void OnLvnItemchangedListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedButtonToObtain();
+	afx_msg void OnLvnItemchangedListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedButtonToCandidate();
 };

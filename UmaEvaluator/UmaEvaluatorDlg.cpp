@@ -152,6 +152,7 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	ReadSkillTSV();
 	ReadSkillLv();
 	ReadStatusPointTSV();
+	ReadUniqLv();
 
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
 }
@@ -203,6 +204,22 @@ void CUmaEvaluatorDlg::ReadSkillLv()
 		wstring sFilePNG = sSkillDir + L"Lv" + si + L".png";
 		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 		m_skillLv.push_back(img);
+	}
+}
+
+void CUmaEvaluatorDlg::ReadUniqLv()
+{
+	m_uniqLv.clear();
+
+	// 固有スキルレベル画像の読み込み
+	wstring sImgDir = GetImgDir();
+	wstring sSkillDir = sImgDir + L"skills\\";
+
+	for (int i = 0; i < 6; ++i) {
+		wstring si = to_wstring(i+1);
+		wstring sFilePNG = sSkillDir + L"uniqLv" + si + L".png";
+		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		m_uniqLv.push_back(img);
 	}
 }
 
@@ -458,7 +475,7 @@ int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img)
 	return n;
 }
 
-int CUmaEvaluatorDlg::GetImageLv(const cv::Mat& img)
+int CUmaEvaluatorDlg::GetImageSkillLv(const cv::Mat& img)
 {
 	double dMax = 0.0;
 	int iMax = 0;
@@ -471,6 +488,22 @@ int CUmaEvaluatorDlg::GetImageLv(const cv::Mat& img)
 	}
 
 	return iMax;
+}
+
+int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img)
+{
+	double dMax = 0.0;
+	int iMax = 0;
+	for (int i = 0; i < m_uniqLv.size(); ++i) {
+		double d = MatchImageRel(img, m_uniqLv[i]);
+		if (d > dMax) {
+			dMax = d;
+			iMax = i;
+
+		}
+	}
+
+	return iMax + 1;
 }
 
 int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img)
@@ -577,9 +610,34 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 	cv::Mat img_finish;
 	cv::resize(img, img_finish, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
+
+	// ウマ娘詳細
+	cv::Mat img_detail(img_finish, cv::Rect(170, 30, 110, 25));
+	wstring sFilePNG = sImgDir + L"umamusume_detail.png";
+	cv::Mat img_detail_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+	if (MatchImage(img_detail, img_detail_ref)) {
+
+		cv::Mat img_skill(img_finish, cv::Rect(310, 390, 45, 15));
+		wstring sFilePNG = sImgDir + L"umamusume_skill.png";
+		cv::Mat img_skill_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		if (MatchImage(img_skill, img_skill_ref)) {
+
+			cv::Mat img_UniqLv(img_finish, cv::Rect(195, 440, 25, 15));
+
+			int n = GetImageUniqLv(img_UniqLv);
+
+			m_comboUniqueSkillLv.SetCurSel(n-1);
+		}
+
+		return;
+	}
+
+
+
 	// 育成完了確認
 	cv::Mat img_kanryou_kakunin(img_finish, cv::Rect(15, 5, 90, 15));
-	wstring sFilePNG = sImgDir + L"kanryou_kakunin.png";
+	sFilePNG = sImgDir + L"kanryou_kakunin.png";
 	cv::Mat img_kanryou_kakunin_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 	if (MatchImage(img_kanryou_kakunin, img_kanryou_kakunin_ref)) {
@@ -678,7 +736,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 					continue;
 
 				cv::Mat img_Lv(img_skill_frame, cv::Rect(365, 2, 10, 15));
-				int iLv = GetImageLv(img_Lv);
+				int iLv = GetImageSkillLv(img_Lv);
 
 				bool bFound = false;
 				for (int j = 0; j < m_vSkills.size(); ++j) {

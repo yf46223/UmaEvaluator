@@ -55,8 +55,10 @@ private:
 	void ReadSkillTSV();
 	void SaveSkillTSV();
 	void ReadSkillLv();
+	void ReadUniqLv();
 	void ReadStatusPointTSV();
-	int GetImageLv(const cv::Mat& img);
+	int GetImageSkillLv(const cv::Mat& img);
+	int GetImageUniqLv(const cv::Mat& img);
 	int GetImageSkill(const cv::Mat& img);
 	vector<pair<cv::Mat, bool> > GetSkillImages(const cv::Mat img_finish);
 	CString WS2CS(const wstring& ws);
@@ -67,6 +69,7 @@ private:
 private:
 	vector<CSkill> m_skills;
 	vector<cv::Mat> m_skillLv;
+	vector<cv::Mat> m_uniqLv;
 	vector<int> m_vnStatusPoint;
 
 	vector<CSkillItem> m_vSkills;

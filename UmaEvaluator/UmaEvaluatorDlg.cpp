@@ -437,19 +437,41 @@ wstring CUmaEvaluatorDlg::GetExeDir()
 	return sDir;
 }
 
-int CUmaEvaluatorDlg::GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img)
+int CUmaEvaluatorDlg::GetTekisei(const cv::Mat& img)
 {
-	double dMax = 0.0;
-	int iMax = 9;
+	double R_REF[8] = { 240.0, 244.3, 244.0, 207.9, 196.6, 231.3, 222.7, 214.8 };
+	double G_REF[8] = { 222.9, 212.4, 203.1, 233.4, 225.2, 201.3, 220.6, 214.5 };
+	double B_REF[8] = { 184.7, 190.7, 215.7, 199.9, 243.1, 240.7, 241.8, 215.4 };
+
+	double r = 0.0;
+	double g = 0.0;
+	double b = 0.0;
+	for (int j = 0; j < img.rows; ++j) {
+		for (int k = 0; k < img.cols; ++k) {
+			cv::Vec3b pix = img.at<cv::Vec3b>(cv::Point(k, j));
+			b += pix[0];
+			g += pix[1];
+			r += pix[2];
+		}
+	}
+	r /= img.rows * img.cols;
+	g /= img.rows * img.cols;
+	b /= img.rows * img.cols;
+
+	int iMin = 0;
+	double dMin = 255.0 * 255.0 * 3.0;
 	for (int i = 0; i < 8; ++i) {
-		double d = MatchImageRel(img, img_ref[i]);
-		if (d > dMax) {
-			dMax = d;
-			iMax = i;
+		double rd = R_REF[i] - r;
+		double gd = G_REF[i] - g;
+		double bd = B_REF[i] - b;
+		double d = rd * rd + gd * gd + bd * bd;
+		if (d < dMin) {
+			iMin = i;
+			dMin = d;
 		}
 	}
 
-	return iMax;
+	return iMin;
 }
 
 int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img)
@@ -602,8 +624,8 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 	wstring sBinDir = GetExeDir();
 	wstring sImgDir = GetImgDir();
 
-
 	cv::Mat img = GetUmaWindowImage();
+
 	if (img.empty())
 		return;
 
@@ -618,16 +640,92 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 	if (MatchImage(img_detail, img_detail_ref)) {
 
-		cv::Mat img_skill(img_finish, cv::Rect(310, 390, 45, 15));
-		wstring sFilePNG = sImgDir + L"umamusume_skill.png";
-		cv::Mat img_skill_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
-		if (MatchImage(img_skill, img_skill_ref)) {
+		{ // 星
+			int nStar = 0;
+			int l = 59;
+			for (int i = 0; i < 5; ++i) {
+				cv::Vec3b pix = img_finish.at<cv::Vec3b>(cv::Point(l, 170));
+				int b = pix[0];
+				if (150 < b) break;
+				++nStar;
+				l += 15;
+			}
+			if (0 < nStar) {
+				m_comboStar.SetCurSel(nStar - 1);
+			}
+		}
 
-			cv::Mat img_UniqLv(img_finish, cv::Rect(195, 440, 25, 15));
+		{ // ステータス
 
-			int n = GetImageUniqLv(img_UniqLv);
 
-			m_comboUniqueSkillLv.SetCurSel(n-1);
+			CEdit* edits[5] = { &m_editSpeed, &m_editStamina, &m_editPower, &m_editKonjou, &m_editKashikosa };
+			int RECT_LEFT[5] = { 50, 134, 218, 302, 386 };
+
+			for (int i = 0; i < 5; ++i) {
+				// 左と上下に多めにとって、白く塗りつぶす
+				cv::Rect rect(RECT_LEFT[i] - 10, 210 - 10, 58, 17 + 20);
+				cv::Mat img(img_finish, rect);
+
+				{
+						cv::Rect rect_fill(0, 0, 10, 17 + 20);
+						cv::rectangle(img, rect_fill, cv::Scalar(255, 255, 255), cv::FILLED);
+				}
+
+				{
+					cv::Rect rect_fill(0, 0, 58, 10);
+					cv::rectangle(img, rect_fill, cv::Scalar(255, 255, 255), cv::FILLED);
+				}
+
+				{
+					cv::Rect rect_fill(0, 17 + 20 - 10, 58, 10);
+					cv::rectangle(img, rect_fill, cv::Scalar(255, 255, 255), cv::FILLED);
+				}
+
+				int n = GetNumberOCR(img);
+
+				edits[i]->SetWindowTextW(Int2CS(n));
+			}
+		}
+
+		{ // 適正
+			CComboBox* combos[10] = {
+				&m_comboTurf, &m_comboDart,
+				&m_comboShort, &m_comboMile, &m_comboMiddle, &m_comboLong,
+				&m_comboNige, &m_comboSenkou, &m_comboSashi, &m_comboOikomi
+			};
+
+			int RECT_LEFT[4] = { 150, 233, 316, 399 };
+			int RECT_TOP[3] = { 255, 280, 305 };
+
+			int i = 0;
+			for (int iRow = 0; iRow < 3; ++iRow) {
+				for (int iCol = 0; iCol < 4; ++iCol) {
+					if (iRow == 0 && iCol == 2)
+						break;
+					int l = RECT_LEFT[iCol];
+					int t = RECT_TOP[iRow];
+					cv::Mat img(img_finish, cv::Rect(l, t, 20, 15));
+
+					int j = GetTekisei(img);
+					combos[i]->SetCurSel(j);
+
+					++i;
+				}
+			}
+		}
+
+		{ // 固有スキルレベル
+			cv::Mat img_skill(img_finish, cv::Rect(310, 390, 45, 15));
+			wstring sFilePNG = sImgDir + L"umamusume_skill.png";
+			cv::Mat img_skill_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+			if (MatchImage(img_skill, img_skill_ref)) {
+
+				cv::Mat img_UniqLv(img_finish, cv::Rect(195, 440, 25, 15));
+
+				int n = GetImageUniqLv(img_UniqLv);
+				m_comboUniqueSkillLv.SetCurSel(n - 1);
+			}
 		}
 
 		return;
@@ -635,88 +733,11 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 
 
-	// 育成完了確認
-	cv::Mat img_kanryou_kakunin(img_finish, cv::Rect(15, 5, 90, 15));
-	sFilePNG = sImgDir + L"kanryou_kakunin.png";
-	cv::Mat img_kanryou_kakunin_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
-
-	if (MatchImage(img_kanryou_kakunin, img_kanryou_kakunin_ref)) {
-
-		// 星
-		{
-			int nStar = 0;
-			int l = 35;
-			for (int i = 0; i < 5; ++i) {
-				cv::Vec3b pix = img_finish.at<cv::Vec3b>(cv::Point(l, 450));
-				int b = pix[0];
-				if (150 < b) break;
-				++nStar;
-				l += 25;
-			}
-			if (0 < nStar) {
-				m_comboStar.SetCurSel(nStar - 1);
-			}
-		}
-
-		// ステータス
-		cv::Mat img_status(img_finish, cv::Rect(230, 180, 80, 20));
-		wstring sFilePNG = sImgDir + L"status.png";
-		cv::Mat img_status_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
-
-		if (MatchImage(img_status, img_status_ref)) {
-			cv::Mat img_status_detail(img_finish, cv::Rect(240, 240, 70, 110));
-			wstring sFilePNG = sImgDir + L"status_detail.png";
-			cv::Mat img_status_detail_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
-
-			if (MatchImage(img_status_detail, img_status_detail_ref)) {
-
-				CEdit* edits[5] = { &m_editSpeed, &m_editStamina, &m_editPower, &m_editKonjou, &m_editKashikosa };
-				int RECT_TOP[5] = { 232, 255, 279, 302, 326 };
-
-				for (int i = 0; i < 5; ++i) {
-					cv::Rect rect(345, RECT_TOP[i], 60, 28);
-
-					cv::Mat img(img_finish, rect);
-
-					int n = GetNumberOCR(img);
-
-					edits[i]->SetWindowTextW(Int2CS(n));
-				}
-			}
-
-			CComboBox* combos[10] = {
-				&m_comboTurf, &m_comboDart,
-				&m_comboShort, &m_comboMile, &m_comboMiddle, &m_comboLong,
-				&m_comboNige, &m_comboSenkou, &m_comboSashi, &m_comboOikomi
-			};
-
-			int RECT_RIGHT[2] = { 343, 413 };
-			int RECT_TOP[5] = { 373, 401, 423, 455, 477 };
-
-			const wstring TEKISEI[8] = { L"S", L"A", L"B", L"C", L"D", L"E", L"F", L"G" };
-
-			cv::Mat img_tekisei[8];
-			for (int i = 0; i < 8; ++i) {
-				wstring sRefFile = sImgDir + TEKISEI[i] + L".png";
-				img_tekisei[i] = cv::imread(string(sRefFile.begin(), sRefFile.end()));
-			}
-
-			for (int i = 0; i < 10; ++i) {
-				int r = RECT_RIGHT[i % 2];
-				int t = RECT_TOP[i / 2];
-				cv::Mat img(img_finish, cv::Rect(r, t, 14, 14));
-				int j = GetTekisei(img_tekisei, img);
-				combos[i]->SetCurSel(j);
-			}
-		}
-	}
-
-	else {
+	{ // スキル取得
 		cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
 		wstring sFilePNG = sImgDir + L"skill_select.png";
 		cv::Mat img_skill_select_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
-		// スキル取得
 		if (MatchImage(img_skill_select, img_skill_select_ref)) {
 
 			cv::Mat img_skill_pt(img_finish, cv::Rect(330, 250, 70, 25));

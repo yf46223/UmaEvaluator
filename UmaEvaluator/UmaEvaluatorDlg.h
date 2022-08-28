@@ -50,7 +50,7 @@ private:
 	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.995);
 	wstring GetExeDir();
 	wstring GetImgDir() { return GetExeDir() + L"img\\"; }
-	int GetTekisei(const cv::Mat img_ref[8], const cv::Mat& img);
+	int GetTekisei(const cv::Mat& img);
 	int GetNumberOCR(const cv::Mat& img);
 	void ReadSkillTSV();
 	void SaveSkillTSV();

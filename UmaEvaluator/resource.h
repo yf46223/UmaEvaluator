@@ -30,6 +30,7 @@
 #define IDC_COMBO_STAR                  1022
 #define IDC_LIST1                       1023
 #define IDC_LIST_SKILL                  1023
+#define IDC_COMBO_UNIQUE_SKILL_LEVEL    1023
 #define IDC_EDIT_SKILL_NAME             1025
 #define IDC_LIST2                       1026
 #define IDC_LIST_CTRL_SKILL             1026
@@ -38,7 +39,6 @@
 #define IDC_LIST_CTRL_SKILL_CANDIDATE   1027
 #define IDC_BUTTON_TO_OBTAIN            1028
 #define IDC_BUTTON_TO_CANDIDATE         1029
-#define IDC_STATIC_STATUS_POTIN         1030
 #define IDC_STATIC_STATUS_POINT         1030
 
 // Next default values for new objects

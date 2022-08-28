@@ -115,4 +115,7 @@ public:
 	afx_msg void OnEnChangeEditKonjou();
 	afx_msg void OnEnChangeEditKashikosa();
 	CStatic m_stStatusPoint;
+	afx_msg void OnCbnSelchangeComboStar();
+	afx_msg void OnCbnSelchangeComboUniqueSkillLevel();
+	CComboBox m_comboUniqueSkillLv;
 };

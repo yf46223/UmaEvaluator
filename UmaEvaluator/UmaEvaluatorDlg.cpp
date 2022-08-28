@@ -82,6 +82,7 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_OBTAIN, m_listCtrlSkillObtain);
 	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_CANDIDATE, m_listCtrlSkillCandidate);
 	DDX_Control(pDX, IDC_STATIC_STATUS_POINT, m_stStatusPoint);
+	DDX_Control(pDX, IDC_COMBO_UNIQUE_SKILL_LEVEL, m_comboUniqueSkillLv);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -100,6 +101,8 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT_POWER, &CUmaEvaluatorDlg::OnEnChangeEditPower)
 	ON_EN_CHANGE(IDC_EDIT_KONJOU, &CUmaEvaluatorDlg::OnEnChangeEditKonjou)
 	ON_EN_CHANGE(IDC_EDIT_KASHIKOSA, &CUmaEvaluatorDlg::OnEnChangeEditKashikosa)
+	ON_CBN_SELCHANGE(IDC_COMBO_STAR, &CUmaEvaluatorDlg::OnCbnSelchangeComboStar)
+	ON_CBN_SELCHANGE(IDC_COMBO_UNIQUE_SKILL_LEVEL, &CUmaEvaluatorDlg::OnCbnSelchangeComboUniqueSkillLevel)
 END_MESSAGE_MAP()
 
 
@@ -940,19 +943,60 @@ void CUmaEvaluatorDlg::OnEnChangeEditKashikosa()
 
 void CUmaEvaluatorDlg::UpdateStatusPoint()
 {
+	m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：");
+
 	int nPt = 0;
 
+	// ステータス評価点
 	CEdit* edits[5] = { &m_editSpeed, &m_editStamina, &m_editPower, &m_editKonjou, &m_editKashikosa };
 	for (int i = 0; i < 5; ++i) {
 		CString cs;
 		edits[i]->GetWindowTextW(cs);
 		int n = _ttoi(cs);
 
-		if (0 <= n && n <= 1200) {
+		if (0 < n && n <= 1200) {
 			nPt += m_vnStatusPoint[n];
+		}
+		else {
+			return;
 		}
 	}
 
-	m_stStatusPoint.SetWindowTextW(L"ステータス評価点：" + Int2CS(nPt));
+	// 固有スキル評価点
+	int iStar = m_comboStar.GetCurSel() + 1;
+	int iLv = m_comboUniqueSkillLv.GetCurSel() + 1;
+	if (iStar < 1) return;
+	if (iLv < 1) return;
 
+	if (iStar <= 2) {
+		if (iLv == 1) nPt += 120;
+		if (iLv == 2) nPt += 240;
+		if (iLv == 3) nPt += 360;
+		if (iLv == 4) nPt += 480;
+		if (iLv == 5) nPt += 600;
+		if (iLv == 6) return;
+	}
+	else {
+		if (iLv == 1) nPt += 170;
+		if (iLv == 2) nPt += 340;
+		if (iLv == 3) nPt += 510;
+		if (iLv == 4) nPt += 680;
+		if (iLv == 5) nPt += 850;
+		if (iLv == 6) nPt += 1020;
+	}
+
+	m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：" + Int2CS(nPt));
+
+}
+
+
+void CUmaEvaluatorDlg::OnCbnSelchangeComboStar()
+{
+	UpdateStatusPoint();
+}
+
+
+void CUmaEvaluatorDlg::OnCbnSelchangeComboUniqueSkillLevel()
+{
+	UpdateStatusPoint();
 }

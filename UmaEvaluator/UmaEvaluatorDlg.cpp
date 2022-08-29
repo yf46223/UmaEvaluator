@@ -84,6 +84,9 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_STATUS_EVAL, m_stStatusPoint);
 	DDX_Control(pDX, IDC_COMBO_UNIQUE_SKILL_LEVEL, m_comboUniqueSkillLv);
 	DDX_Control(pDX, IDC_STATIC_SKILL_EVAL, m_stSkillEval);
+	DDX_Control(pDX, IDC_STATIC_TOTAL_EVAL, m_stTotalEval);
+	DDX_Control(pDX, IDC_STATIC_SKILL_PT_USED, m_stSkillPtUsed);
+	DDX_Control(pDX, IDC_STATIC_SKILL_PT_REMAIN, m_stSkillPtRemain);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -108,7 +111,6 @@ END_MESSAGE_MAP()
 
 
 // CUmaEvaluatorDlg メッセージ ハンドラー
-
 BOOL CUmaEvaluatorDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -727,7 +729,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 			}
 		}
 
-		UpdateStatusPoint();
+		UpdateEval();
 		return;
 	}
 
@@ -793,6 +795,8 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 {
 	m_bOnUpdateSkillList = true;
 
+	int nPtUsed = 0;
+
 	m_listCtrlSkillCandidate.DeleteAllItems();
 	m_listCtrlSkillObtain.DeleteAllItems();
 	int iCandidate = 0;
@@ -814,6 +818,8 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 				m_listCtrlSkillObtain.SetItemState(iObtain, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 			}
 			++iObtain;
+
+			nPtUsed += nPt;
 		}
 		else {
 			m_listCtrlSkillCandidate.InsertItem(iCandidate, WS2CS(ws));
@@ -825,6 +831,19 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 			}
 			++iCandidate;
 		}
+	}
+
+	m_stSkillPtUsed.SetWindowTextW(L"使用スキルPt：" + Int2CS(nPtUsed));
+
+	CString cs;
+	m_editSkillPt.GetWindowTextW(cs);
+	if (cs != L"") {
+		int nSkillPt = _ttoi(cs);
+		int nPtRemain = nSkillPt - nPtUsed;
+		m_stSkillPtRemain.SetWindowTextW(L"残りスキルPt：" + Int2CS(nPtRemain));
+	}
+	else {
+		m_stSkillPtRemain.SetWindowTextW(L"残りスキルPt：");
 	}
 
 	m_bOnUpdateSkillList = false;
@@ -948,7 +967,7 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 		m_vSkillItems = skillsNew;
 
 		UpdateSkillList();
-		UpdateStatusPoint();
+		UpdateEval();
 	}
 
 	*pResult = 0;
@@ -963,7 +982,8 @@ void CUmaEvaluatorDlg::OnBnClickedButtonToObtain()
 		}
 	}
 	UpdateSkillList();
-	UpdateStatusPoint();
+	UpdateEval();
+
 }
 
 
@@ -1002,65 +1022,90 @@ void CUmaEvaluatorDlg::OnBnClickedButtonToCandidate()
 		}
 	}
 	UpdateSkillList();
-
-	UpdateStatusPoint();
+	UpdateEval();
 }
 
 
 void CUmaEvaluatorDlg::OnEnChangeEditSpeed()
 {
-	UpdateStatusPoint();
+	UpdateEval();
 }
 
 
 
 void CUmaEvaluatorDlg::OnEnChangeEditStamina()
 {
-	UpdateStatusPoint();
+	UpdateEval();
 }
 
 
 void CUmaEvaluatorDlg::OnEnChangeEditPower()
 {
-	UpdateStatusPoint();
+	UpdateEval();
 }
 
 
 void CUmaEvaluatorDlg::OnEnChangeEditKonjou()
 {
-	UpdateStatusPoint();
+	UpdateEval();
 }
 
 
 void CUmaEvaluatorDlg::OnEnChangeEditKashikosa()
 {
-	UpdateStatusPoint();
+	UpdateEval();
 }
 
-void CUmaEvaluatorDlg::UpdateStatusPoint()
+void CUmaEvaluatorDlg::UpdateEval()
 {
-	{
-		int nPt = GetStatusUniqEval();
-
-		if (nPt > -1) {
-			m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：" + Int2CS(nPt));
-		}
-		else {
-			m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：");
-		}
+	int nEvalStatusUniq = GetStatusUniqEval();
+	if (nEvalStatusUniq > -1) {
+		m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：" + Int2CS(nEvalStatusUniq));
+	}
+	else {
+		m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：");
 	}
 
-	{
-		int nPt = GetSkillEval();
-
-		if (nPt > -1) {
-			m_stSkillEval.SetWindowTextW(L"取得スキル評価点：" + Int2CS(nPt));
-		}
-		else {
-			m_stSkillEval.SetWindowTextW(L"取得スキル評価点：");
-		}
+	int nEvalSkill = GetSkillEval();
+	if (nEvalSkill > -1) {
+		m_stSkillEval.SetWindowTextW(L"取得スキル評価点：" + Int2CS(nEvalSkill));
+	}
+	else {
+		m_stSkillEval.SetWindowTextW(L"取得スキル評価点：");
 	}
 
+	if (nEvalStatusUniq > -1 && nEvalSkill > -1) {
+		int nEvalTotal = nEvalStatusUniq + nEvalSkill;
+		wstring sRank = GetRankFromEval(nEvalTotal);
+		m_stTotalEval.SetWindowTextW(L"評価点合計：" + Int2CS(nEvalTotal) + " ランク：" + WS2CS(sRank));
+	}
+	else {
+		m_stTotalEval.SetWindowTextW(L"評価点合計：");
+	}
+}
+
+wstring CUmaEvaluatorDlg::GetRankFromEval(int nEval)
+{
+	const int RANK_POINT[29] = {
+		0, 300, 600, 900, 1300, 1800, 2300, 2900, 3500, 4900, 6500, 8200, 10000, 12100, // G-A+
+		14500, 15900, 17500, 19200,  // S-SS+
+		19600, 20000, 20400, 20800,  21200, 21600, 22100, 22500, 23000, 23400, // UG
+		23900 // UF
+	};
+	const wstring RANK_STR[29] = {
+		L"G", L"G+", L"F", L"F+", L"E", L"E+", L"D", L"D+", L"C", L"C+", L"B", L"B+", L"A", L"A+",
+		L"S", L"S+", L"SS", L"SS+",
+		L"UG", L"UG1", L"UG2", L"UG3", L"UG4", L"UG5", L"UG6", L"UG7", L"UG8", L"UG9",
+		L">=UF",
+	};
+
+	int iRank = 0;
+	for (int i = 0; i < 29; ++i) {
+		if (RANK_POINT[i] <= nEval)
+			iRank = i;
+	}
+
+	return RANK_STR[iRank];
 }
 
 int CUmaEvaluatorDlg::GetStatusUniqEval()
@@ -1125,11 +1170,11 @@ int CUmaEvaluatorDlg::GetSkillEval()
 
 void CUmaEvaluatorDlg::OnCbnSelchangeComboStar()
 {
-	UpdateStatusPoint();
+	UpdateEval();
 }
 
 
 void CUmaEvaluatorDlg::OnCbnSelchangeComboUniqueSkillLevel()
 {
-	UpdateStatusPoint();
+	UpdateEval();
 }

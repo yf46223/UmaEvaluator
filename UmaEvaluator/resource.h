@@ -40,9 +40,12 @@
 #define IDC_EDIT_EVAL                   1027
 #define IDC_BUTTON_TO_OBTAIN            1028
 #define IDC_BUTTON_TO_CANDIDATE         1029
-#define IDC_STATIC_STATUS_POINT         1030
 #define IDC_STATIC_STATUS_EVAL          1030
 #define IDC_STATIC_SKILL_EVAL           1031
+#define IDC_STATIC_TOTAL_EVAL           1032
+#define IDC_STATIC_SKILL_PT             1033
+#define IDC_STATIC_SKILL_PT_USED        1033
+#define IDC_STATIC_SKILL_PT_REMAIN      1034
 
 // Next default values for new objects
 // 

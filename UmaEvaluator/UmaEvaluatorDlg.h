@@ -64,10 +64,11 @@ private:
 	CString WS2CS(const wstring& ws);
 	CString Int2CS(int n);
 	void UpdateSkillList();
-	void UpdateStatusPoint();
+	void UpdateEval();
 	int GetSkillObtainPt(const CSkillItem& skillItem);
 	int GetStatusUniqEval();
 	int GetSkillEval();
+	wstring GetRankFromEval(int nEval);
 
 private:
 	vector<CSkill> m_skills;
@@ -125,4 +126,7 @@ public:
 	afx_msg void OnCbnSelchangeComboUniqueSkillLevel();
 	CComboBox m_comboUniqueSkillLv;
 	CStatic m_stSkillEval;
+	CStatic m_stTotalEval;
+	CStatic m_stSkillPtUsed;
+	CStatic m_stSkillPtRemain;
 };

@@ -12,7 +12,8 @@
 IMPLEMENT_DYNAMIC(CRegisterSkillDlg, CDialogEx)
 
 CRegisterSkillDlg::CRegisterSkillDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_DIALOG_REGISTER_SKILL, pParent)
+	: CDialogEx(IDD_DIALOG_REGISTER_SKILL, pParent),
+    m_nPt(0), m_nEval(0)
 {
 
 }
@@ -26,6 +27,7 @@ void CRegisterSkillDlg::DoDataExchange(CDataExchange* pDX)
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_EDIT_SKILL_NAME, m_editSkillName);
     DDX_Control(pDX, IDC_EDIT_PT, m_editPt);
+    DDX_Control(pDX, IDC_EDIT_EVAL, m_editEval);
 }
 
 
@@ -37,6 +39,7 @@ bool CRegisterSkillDlg::Setup(CSkill& skill)
 {
     m_sName = L"";
     m_nPt = 0;
+    m_nEval = 0;
 
     cv::imshow("Skill Image", skill.img);
 
@@ -45,6 +48,7 @@ bool CRegisterSkillDlg::Setup(CSkill& skill)
     if (b) {
         skill.sName = m_sName;
         skill.nPt = m_nPt;
+        skill.nEval = m_nEval;
     }
 
     cv::destroyAllWindows();
@@ -91,6 +95,25 @@ void CRegisterSkillDlg::OnBnClickedOk()
             return;
         }
         m_nPt = nPt;
+    }
+
+    {
+        CString cs;
+        m_editEval.GetWindowTextW(cs);
+        wstring sEval = cs.GetString();
+
+        int nEval = 0;
+        try {
+            nEval = std::stoi(sEval);
+        }
+        catch (...) {
+        }
+
+        if (nEval <= 0) {
+            MessageBox(L"評価点の値が不正です。");
+            return;
+        }
+        m_nEval = nEval;
     }
 
     // TODO: ここにコントロール通知ハンドラー コードを追加します。

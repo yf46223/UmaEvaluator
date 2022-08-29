@@ -65,6 +65,9 @@ private:
 	CString Int2CS(int n);
 	void UpdateSkillList();
 	void UpdateStatusPoint();
+	int GetSkillObtainPt(const CSkillItem& skillItem);
+	int GetStatusUniqEval();
+	int GetSkillEval();
 
 private:
 	vector<CSkill> m_skills;
@@ -72,7 +75,7 @@ private:
 	vector<cv::Mat> m_uniqLv;
 	vector<int> m_vnStatusPoint;
 
-	vector<CSkillItem> m_vSkills;
+	vector<CSkillItem> m_vSkillItems;
 	bool m_bOnUpdateSkillList;
 
 // 実装
@@ -121,4 +124,5 @@ public:
 	afx_msg void OnCbnSelchangeComboStar();
 	afx_msg void OnCbnSelchangeComboUniqueSkillLevel();
 	CComboBox m_comboUniqueSkillLv;
+	CStatic m_stSkillEval;
 };

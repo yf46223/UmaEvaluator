@@ -81,8 +81,9 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_SKILL_PT, m_editSkillPt);
 	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_OBTAIN, m_listCtrlSkillObtain);
 	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_CANDIDATE, m_listCtrlSkillCandidate);
-	DDX_Control(pDX, IDC_STATIC_STATUS_POINT, m_stStatusPoint);
+	DDX_Control(pDX, IDC_STATIC_STATUS_EVAL, m_stStatusPoint);
 	DDX_Control(pDX, IDC_COMBO_UNIQUE_SKILL_LEVEL, m_comboUniqueSkillLv);
+	DDX_Control(pDX, IDC_STATIC_SKILL_EVAL, m_stSkillEval);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -142,11 +143,13 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	m_listCtrlSkillCandidate.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 100);
 	m_listCtrlSkillCandidate.InsertColumn(1, L"ヒントLv", LVCFMT_LEFT, 50);
 	m_listCtrlSkillCandidate.InsertColumn(2, L"取得Pt"  , LVCFMT_LEFT, 50);
+	m_listCtrlSkillCandidate.InsertColumn(3, L"評価点", LVCFMT_LEFT, 50);
 	m_listCtrlSkillCandidate.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
 	m_listCtrlSkillObtain.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 100);
 	m_listCtrlSkillObtain.InsertColumn(1, L"ヒントLv", LVCFMT_LEFT, 50);
 	m_listCtrlSkillObtain.InsertColumn(2, L"取得Pt", LVCFMT_LEFT, 50);
+	m_listCtrlSkillObtain.InsertColumn(3, L"評価点", LVCFMT_LEFT, 50);
 	m_listCtrlSkillObtain.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
 	ReadSkillTSV();
@@ -174,14 +177,12 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 		CSkill skill;
 
 		wstringstream iss(line);
-		wstring sIdx, sPt, sName;
-		getline(iss, sIdx, L'\t');
-		skill.idx = stoi(sIdx);
-		getline(iss, sPt, L'\t');
-		skill.nPt = stoi(sPt);
-		getline(iss, sName, L'\t');
-		skill.sName = sName;
-		wstring sFilePNG = sSkillDir + sIdx + L".png";
+		wstring s;
+		getline(iss, s, L'\t'); skill.idx = stoi(s);
+		getline(iss, s, L'\t'); skill.nPt = stoi(s);
+		getline(iss, s, L'\t'); skill.nEval = stoi(s);
+		getline(iss, s, L'\t'); skill.sName = s;
+		wstring sFilePNG = sSkillDir + to_wstring(skill.idx) + L".png";
 		skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 		m_skills.push_back(skill);
@@ -236,7 +237,7 @@ void CUmaEvaluatorDlg::SaveSkillTSV()
 
 	for (int i = 0; i < m_skills.size(); ++i) {
 		const CSkill& skill = m_skills[i];
-		ofs << skill.idx << "\t" << skill.nPt << "\t" << skill.sName << endl;
+		ofs << skill.idx << "\t" << skill.nPt << "\t" << skill.nEval << "\t" << skill.sName << endl;
 	}
 
 	ofs.imbue(L);
@@ -759,19 +760,33 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 				int iLv = GetImageSkillLv(img_Lv);
 
 				bool bFound = false;
-				for (int j = 0; j < m_vSkills.size(); ++j) {
-					if (m_vSkills[j].iSkill == iSkill) {
+				for (int j = 0; j < m_vSkillItems.size(); ++j) {
+					if (m_vSkillItems[j].iSkill == iSkill) {
 						bFound = true;
 						break;
 					}
 				}
 				if (!bFound) {
-					m_vSkills.push_back(CSkillItem(iSkill, iLv));
+					m_vSkillItems.push_back(CSkillItem(iSkill, iLv));
 				}
 			}
 			UpdateSkillList();
 		}
 	}
+}
+
+int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem)
+{
+	int iSkill = skillItem.iSkill;
+	int iLv = skillItem.iLv;
+	const CSkill& skill = m_skills[skillItem.iSkill];
+	int nPt = skill.nPt;
+	if (iLv == 1) nPt = int(nPt * 0.9);
+	if (iLv == 2) nPt = int(nPt * 0.8);
+	if (iLv == 3) nPt = int(nPt * 0.7);
+	if (iLv == 4) nPt = int(nPt * 0.65);
+	if (iLv == 5) nPt = int(nPt * 0.6);
+	return nPt;
 }
 
 void CUmaEvaluatorDlg::UpdateSkillList()
@@ -782,22 +797,20 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 	m_listCtrlSkillObtain.DeleteAllItems();
 	int iCandidate = 0;
 	int iObtain = 0;
-	for (int i = 0; i < m_vSkills.size(); ++i) {
-		const CSkill& skill = m_skills[m_vSkills[i].iSkill];
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		int iSkill = m_vSkillItems[i].iSkill;
+		int iLv = m_vSkillItems[i].iLv;
+		const CSkill& skill = m_skills[iSkill];
 		const wstring& ws = skill.sName;
-		int iLv = m_vSkills[i].iLv;
-		int nPt = skill.nPt;
-		if (iLv == 1) nPt = int(nPt * 0.9);
-		if (iLv == 2) nPt = int(nPt * 0.8);
-		if (iLv == 3) nPt = int(nPt * 0.7);
-		if (iLv == 4) nPt = int(nPt * 0.65);
-		if (iLv == 5) nPt = int(nPt * 0.6);
 
-		if (m_vSkills[i].bObtain) {
+		int nPt = GetSkillObtainPt(m_vSkillItems[i]);
+
+		if (m_vSkillItems[i].bObtain) {
 			m_listCtrlSkillObtain.InsertItem(iObtain, WS2CS(ws));
 			m_listCtrlSkillObtain.SetItemText(iObtain, 1, Int2CS(iLv));
 			m_listCtrlSkillObtain.SetItemText(iObtain, 2, Int2CS(nPt));
-			if (m_vSkills[i].bSelected) {
+			m_listCtrlSkillObtain.SetItemText(iObtain, 3, Int2CS(skill.nEval));
+			if (m_vSkillItems[i].bSelected) {
 				m_listCtrlSkillObtain.SetItemState(iObtain, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 			}
 			++iObtain;
@@ -806,7 +819,8 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 			m_listCtrlSkillCandidate.InsertItem(iCandidate, WS2CS(ws));
 			m_listCtrlSkillCandidate.SetItemText(iCandidate, 1, Int2CS(iLv));
 			m_listCtrlSkillCandidate.SetItemText(iCandidate, 2, Int2CS(nPt));
-			if (m_vSkills[i].bSelected) {
+			m_listCtrlSkillCandidate.SetItemText(iCandidate, 3, Int2CS(skill.nEval));
+			if (m_vSkillItems[i].bSelected) {
 				m_listCtrlSkillCandidate.SetItemState(iCandidate, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 			}
 			++iCandidate;
@@ -908,11 +922,11 @@ void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillCandidate(NMHDR* pNMHDR, LRE
 	}
 
 	int iCandidate = -1;
-	for (int i = 0; i < m_vSkills.size(); ++i) {
-		if (m_vSkills[i].bObtain)
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (m_vSkillItems[i].bObtain)
 			continue;
 		++iCandidate;
-		m_vSkills[i].bSelected = (siSelected.find(iCandidate) != siSelected.end());
+		m_vSkillItems[i].bSelected = (siSelected.find(iCandidate) != siSelected.end());
 	}
 
 	*pResult = 0;
@@ -926,14 +940,15 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 	if (pLVKeyDow->wVKey == VK_DELETE)
 	{
 		vector<CSkillItem> skillsNew;
-		for (int i = 0; i <  m_vSkills.size(); ++i) {
-			if (m_vSkills[i].bObtain || !m_vSkills[i].bSelected) {
-				skillsNew.push_back(m_vSkills[i]);
+		for (int i = 0; i < m_vSkillItems.size(); ++i) {
+			if (m_vSkillItems[i].bObtain || !m_vSkillItems[i].bSelected) {
+				skillsNew.push_back(m_vSkillItems[i]);
 			}
 		}
-		m_vSkills = skillsNew;
+		m_vSkillItems = skillsNew;
 
 		UpdateSkillList();
+		UpdateStatusPoint();
 	}
 
 	*pResult = 0;
@@ -942,12 +957,13 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 
 void CUmaEvaluatorDlg::OnBnClickedButtonToObtain()
 {
-	for (int i = 0; i < m_vSkills.size(); ++i) {
-		if (!m_vSkills[i].bObtain && m_vSkills[i].bSelected) {
-			m_vSkills[i].bObtain = true;
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (!m_vSkillItems[i].bObtain && m_vSkillItems[i].bSelected) {
+			m_vSkillItems[i].bObtain = true;
 		}
 	}
 	UpdateSkillList();
+	UpdateStatusPoint();
 }
 
 
@@ -967,11 +983,11 @@ void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillObtain(NMHDR* pNMHDR, LRESUL
 	}
 
 	int iObtain = -1;
-	for (int i = 0; i < m_vSkills.size(); ++i) {
-		if (!m_vSkills[i].bObtain)
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (!m_vSkillItems[i].bObtain)
 			continue;
 		++iObtain;
-		m_vSkills[i].bSelected = (siSelected.find(iObtain) != siSelected.end());
+		m_vSkillItems[i].bSelected = (siSelected.find(iObtain) != siSelected.end());
 	}
 
 	*pResult = 0;
@@ -980,12 +996,14 @@ void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillObtain(NMHDR* pNMHDR, LRESUL
 
 void CUmaEvaluatorDlg::OnBnClickedButtonToCandidate()
 {
-	for (int i = 0; i < m_vSkills.size(); ++i) {
-		if (m_vSkills[i].bObtain && m_vSkills[i].bSelected) {
-			m_vSkills[i].bObtain = false;
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (m_vSkillItems[i].bObtain && m_vSkillItems[i].bSelected) {
+			m_vSkillItems[i].bObtain = false;
 		}
 	}
 	UpdateSkillList();
+
+	UpdateStatusPoint();
 }
 
 
@@ -1021,8 +1039,32 @@ void CUmaEvaluatorDlg::OnEnChangeEditKashikosa()
 
 void CUmaEvaluatorDlg::UpdateStatusPoint()
 {
-	m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：");
+	{
+		int nPt = GetStatusUniqEval();
 
+		if (nPt > -1) {
+			m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：" + Int2CS(nPt));
+		}
+		else {
+			m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：");
+		}
+	}
+
+	{
+		int nPt = GetSkillEval();
+
+		if (nPt > -1) {
+			m_stSkillEval.SetWindowTextW(L"取得スキル評価点：" + Int2CS(nPt));
+		}
+		else {
+			m_stSkillEval.SetWindowTextW(L"取得スキル評価点：");
+		}
+	}
+
+}
+
+int CUmaEvaluatorDlg::GetStatusUniqEval()
+{
 	int nPt = 0;
 
 	// ステータス評価点
@@ -1036,15 +1078,15 @@ void CUmaEvaluatorDlg::UpdateStatusPoint()
 			nPt += m_vnStatusPoint[n];
 		}
 		else {
-			return;
+			return -1;
 		}
 	}
 
 	// 固有スキル評価点
 	int iStar = m_comboStar.GetCurSel() + 1;
 	int iLv = m_comboUniqueSkillLv.GetCurSel() + 1;
-	if (iStar < 1) return;
-	if (iLv < 1) return;
+	if (iStar < 1) return -1;
+	if (iLv < 1) return -1;
 
 	if (iStar <= 2) {
 		if (iLv == 1) nPt += 120;
@@ -1052,7 +1094,7 @@ void CUmaEvaluatorDlg::UpdateStatusPoint()
 		if (iLv == 3) nPt += 360;
 		if (iLv == 4) nPt += 480;
 		if (iLv == 5) nPt += 600;
-		if (iLv == 6) return;
+		if (iLv == 6) return -1;
 	}
 	else {
 		if (iLv == 1) nPt += 170;
@@ -1063,10 +1105,23 @@ void CUmaEvaluatorDlg::UpdateStatusPoint()
 		if (iLv == 6) nPt += 1020;
 	}
 
-	m_stStatusPoint.SetWindowTextW(L"ステータス・固有スキル評価点：" + Int2CS(nPt));
-
+	return nPt;
 }
 
+int CUmaEvaluatorDlg::GetSkillEval()
+{
+	int nPt = 0;
+
+	// 取得スキル評価点
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (!m_vSkillItems[i].bObtain)
+			continue;
+		int iSkill = m_vSkillItems[i].iSkill;
+		nPt += m_skills[iSkill].nEval;
+	}
+
+	return nPt;
+}
 
 void CUmaEvaluatorDlg::OnCbnSelchangeComboStar()
 {

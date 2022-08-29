@@ -656,10 +656,8 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 		}
 
 		{ // ステータス
-
-
 			CEdit* edits[5] = { &m_editSpeed, &m_editStamina, &m_editPower, &m_editKonjou, &m_editKashikosa };
-			int RECT_LEFT[5] = { 50, 134, 218, 302, 386 };
+			int RECT_LEFT[5] = { 49, 131, 215, 299, 383 };
 
 			for (int i = 0; i < 5; ++i) {
 				// 左と上下に多めにとって、白く塗りつぶす
@@ -728,13 +726,14 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 			}
 		}
 
+		UpdateStatusPoint();
 		return;
 	}
 
 
 
 	{ // スキル取得
-		cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
+		cv::Mat img_skill_select(img_finish, cv::Rect(15, 5, 100, 15));
 		wstring sFilePNG = sImgDir + L"skill_select.png";
 		cv::Mat img_skill_select_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 

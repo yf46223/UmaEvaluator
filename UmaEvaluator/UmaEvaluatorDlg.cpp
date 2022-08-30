@@ -480,6 +480,10 @@ int CUmaEvaluatorDlg::GetTekisei(const cv::Mat& img)
 
 int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img)
 {
+#ifdef _DEBUG
+	return -1;
+#endif
+
 	wstring sBinDir = GetExeDir();
 	wstring sTessDir = sBinDir + L"tessdata-4.1.0";
 	string s(sTessDir.begin(), sTessDir.end());

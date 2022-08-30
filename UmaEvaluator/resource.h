@@ -43,10 +43,11 @@
 #define IDC_BUTTON_TO_CANDIDATE         1029
 #define IDC_STATIC_STATUS_EVAL          1030
 #define IDC_STATIC_SKILL_EVAL           1031
-#define IDC_LIST3                       1031
 #define IDC_STATIC_TOTAL_EVAL           1032
+#define IDC_MFCBUTTON1                  1032
 #define IDC_STATIC_SKILL_PT             1033
 #define IDC_STATIC_SKILL_PT_USED        1033
+#define IDC_STATIC_SKILL_IMAGE          1033
 #define IDC_STATIC_SKILL_PT_REMAIN      1034
 
 // Next default values for new objects
@@ -55,7 +56,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1032
+#define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

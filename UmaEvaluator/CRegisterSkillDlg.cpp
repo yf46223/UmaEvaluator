@@ -25,12 +25,15 @@ void CRegisterSkillDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_LIST_SKILLS, m_listCtrlSkills);
+    DDX_Control(pDX, IDC_STATIC_SKILL_IMAGE, m_picCtrlSkillImage);
 }
 
 // CUmaEvaluatorDlg メッセージ ハンドラー
 BOOL CRegisterSkillDlg::OnInitDialog()
 {
     BOOL b = CDialogEx::OnInitDialog();
+
+    m_picCtrlSkillImage.SetBitmap(m_bmp);
 
     m_listCtrlSkills.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 300);
     m_listCtrlSkills.SetExtendedStyle(LVS_EX_FULLROWSELECT);
@@ -51,7 +54,19 @@ int CRegisterSkillDlg::Setup(const cv::Mat& img, const vector<CSkill>& skills)
     m_idx = -1;
     m_skills = skills;
 
-    cv::imshow("Skill Image", img);
+    // cv::Mat -> CBitmap
+    char* ColorBuf = (char*)calloc(img.rows * img.rows * 4, sizeof(RGBQUAD));
+    for (int y = 0; y < img.rows; y++) {
+        for (int x = 0; x < img.cols; x++) {
+            ColorBuf[y * img.cols * 4 + x * 4 + 0] = img.data[y * img.step + x * 3 + 0]; // B
+            ColorBuf[y * img.cols * 4 + x * 4 + 1] = img.data[y * img.step + x * 3 + 1]; // G
+            ColorBuf[y * img.cols * 4 + x * 4 + 2] = img.data[y * img.step + x * 3 + 2]; // R
+            ColorBuf[y * img.cols * 4 + x * 4 + 3] = 0;
+        }
+    }
+
+    m_bmp.CreateBitmap(img.cols, img.rows, 1, 32, ColorBuf);
+    free(ColorBuf);
 
     int idx = (DoModal() == IDOK) ? m_idx : -1;
 

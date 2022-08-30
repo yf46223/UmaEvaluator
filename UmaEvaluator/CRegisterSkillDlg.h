@@ -28,6 +28,7 @@ public:
 private:
 	int m_idx;
 	vector<CSkill> m_skills;
+	CBitmap m_bmp;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV サポート
@@ -36,4 +37,5 @@ protected:
 public:
 	afx_msg void OnBnClickedOk();
 	CListCtrl m_listCtrlSkills;
+	CStatic m_picCtrlSkillImage;
 };

@@ -638,7 +638,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 	// ウマ娘詳細
 	cv::Mat img_detail(img_finish, cv::Rect(170, 30, 110, 25));
-	wstring sFilePNG = sImgDir + L"umamusume_detail.png";
+	wstring sFilePNG = sImgDir + L"detail_bar.png";
 	cv::Mat img_detail_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 	if (MatchImage(img_detail, img_detail_ref)) {
@@ -717,7 +717,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 		{ // 固有スキルレベル
 			cv::Mat img_skill(img_finish, cv::Rect(310, 390, 45, 15));
-			wstring sFilePNG = sImgDir + L"umamusume_skill.png";
+			wstring sFilePNG = sImgDir + L"skill_bar.png";
 			cv::Mat img_skill_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 			if (MatchImage(img_skill, img_skill_ref)) {

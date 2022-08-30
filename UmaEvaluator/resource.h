@@ -31,6 +31,7 @@
 #define IDC_LIST1                       1023
 #define IDC_LIST_SKILL                  1023
 #define IDC_COMBO_UNIQUE_SKILL_LEVEL    1023
+#define IDC_LIST_SKILLS                 1023
 #define IDC_EDIT_SKILL_NAME             1025
 #define IDC_LIST2                       1026
 #define IDC_LIST_CTRL_SKILL             1026
@@ -42,6 +43,7 @@
 #define IDC_BUTTON_TO_CANDIDATE         1029
 #define IDC_STATIC_STATUS_EVAL          1030
 #define IDC_STATIC_SKILL_EVAL           1031
+#define IDC_LIST3                       1031
 #define IDC_STATIC_TOTAL_EVAL           1032
 #define IDC_STATIC_SKILL_PT             1033
 #define IDC_STATIC_SKILL_PT_USED        1033
@@ -53,7 +55,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1031
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

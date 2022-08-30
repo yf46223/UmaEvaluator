@@ -18,21 +18,22 @@ public:
 	enum { IDD = IDD_DIALOG_REGISTER_SKILL };
 #endif
 
+protected:
+	virtual BOOL OnInitDialog();
+
 public:
-	bool Setup(CSkill& skill);
+	int Setup(const cv::Mat& img, const vector<CSkill>& skills);
+	void UpdateList();
 
 private:
-	wstring m_sName;
-	int  m_nPt;
-	int m_nEval;
+	int m_idx;
+	vector<CSkill> m_skills;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV サポート
 
 	DECLARE_MESSAGE_MAP()
 public:
-	CEdit m_editSkillName;
 	afx_msg void OnBnClickedOk();
-	CEdit m_editPt;
-	CEdit m_editEval;
+	CListCtrl m_listCtrlSkills;
 };

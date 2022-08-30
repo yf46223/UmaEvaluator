@@ -181,9 +181,10 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 		wstringstream iss(line);
 		wstring s;
 		getline(iss, s, L'\t'); skill.idx = stoi(s);
+		getline(iss, s, L'\t'); skill.sName = s;
 		getline(iss, s, L'\t'); skill.nPt = stoi(s);
 		getline(iss, s, L'\t'); skill.nEval = stoi(s);
-		getline(iss, s, L'\t'); skill.sName = s;
+		getline(iss, s, L'\t'); skill.SetTypeFromStr(s);
 		wstring sFilePNG = sSkillDir + to_wstring(skill.idx) + L".png";
 		skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
@@ -239,7 +240,7 @@ void CUmaEvaluatorDlg::SaveSkillTSV()
 
 	for (int i = 0; i < m_skills.size(); ++i) {
 		const CSkill& skill = m_skills[i];
-		ofs << skill.idx << "\t" << skill.nPt << "\t" << skill.nEval << "\t" << skill.sName << endl;
+		ofs << skill.idx << "\t" << skill.sName << "\t" << skill.nPt << "\t" << skill.nEval << endl;
 	}
 
 	ofs.imbue(L);
@@ -495,7 +496,12 @@ int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img)
 
 	ocr->run(img_gray, text, &boxes, &words, &confidences);
 
-	int n = atoi(text.c_str());
+	int n = -1;
+	try {
+		n = stoi(text);
+	}
+	catch (...) {
+	}
 
 	return n;
 }
@@ -538,6 +544,8 @@ int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img)
 	double dMax = 0.0;
 	int iMax = -1;
 	for (int i = 0; i < m_skills.size(); ++i) {
+		if (m_skills[i].img.empty())
+			continue;
 		cv::Mat img_title_ref(m_skills[i].img, cv::Rect(60, 5, 100, 15));
 		double d = MatchImageRel(img_title, img_title_ref);
 		if (d > max(dMax, 0.98) ) {
@@ -683,8 +691,9 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 				}
 
 				int n = GetNumberOCR(img);
-
-				edits[i]->SetWindowTextW(Int2CS(n));
+				if( n >= 0 ) {
+					edits[i]->SetWindowTextW(Int2CS(n));
+				}
 			}
 		}
 
@@ -733,8 +742,6 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 		return;
 	}
 
-
-
 	{ // スキル取得
 		cv::Mat img_skill_select(img_finish, cv::Rect(15, 5, 100, 15));
 		wstring sFilePNG = sImgDir + L"skill_select.png";
@@ -745,7 +752,9 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 			cv::Mat img_skill_pt(img_finish, cv::Rect(330, 250, 70, 25));
 
 			int n = GetNumberOCR(img_skill_pt);
-			m_editSkillPt.SetWindowTextW(Int2CS(n));
+			if (n >= 0) {
+				m_editSkillPt.SetWindowTextW(Int2CS(n));
+			}
 
 			vector<pair<cv::Mat, bool> > vImages = GetSkillImages(img_finish);
 
@@ -884,44 +893,17 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 		cv::Mat img_skill(img_skill_frame, cv::Rect(5, 5, 280, 90));
 
 		CRegisterSkillDlg dlg;
-		CSkill skill;
-		skill.img = img_skill;
 
-		if (dlg.Setup(skill)) {
-			int kDup = -1;
-			for (int k = 0; k < m_skills.size(); ++k) {
-				if (m_skills[k].sName == skill.sName) {
-					kDup = k;
-					break;
-				}
-			}
-			if (kDup > -1) {
-				int n = MessageBox(L"同名のスキルが存在します。上書きしますか？", L"スキル登録", MB_YESNO);
-				if (n != IDYES) {
-					continue;
-				}
+		int idx = dlg.Setup(img_skill, m_skills);
+		if (idx < 0)
+			continue;
 
-				skill.idx = m_skills[kDup].idx;
-				m_skills[kDup] = skill;
-			}
-			else {
-				int idxMax = 0;
-				for (int k = 0; k < m_skills.size(); ++k) {
-					idxMax = max(idxMax, m_skills[k].idx);
-				}
-				skill.idx = idxMax + 1;
-
-				m_skills.push_back(skill);
-			}
-
-			wstring sIdx = to_wstring(skill.idx);
-			wstring sSkillDir = sImgDir + L"skills\\";
-			wstring sFilePNG = sSkillDir + sIdx + L".png";
-			cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
-
-			SaveSkillTSV();
-		}
+		wstring sSkillDir = sImgDir + L"skills\\";
+		wstring sFilePNG = sSkillDir + to_wstring(idx)+ L".png";
+		cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
 	}
+
+	ReadSkillTSV();
 }
 
 

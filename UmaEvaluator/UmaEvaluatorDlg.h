@@ -129,4 +129,6 @@ public:
 	CStatic m_stTotalEval;
 	CStatic m_stSkillPtUsed;
 	CStatic m_stSkillPtRemain;
+	CButton m_checkKiremono;
+	afx_msg void OnBnClickedCheckKiremono();
 };

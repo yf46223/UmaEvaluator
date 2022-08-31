@@ -87,6 +87,7 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_TOTAL_EVAL, m_stTotalEval);
 	DDX_Control(pDX, IDC_STATIC_SKILL_PT_USED, m_stSkillPtUsed);
 	DDX_Control(pDX, IDC_STATIC_SKILL_PT_REMAIN, m_stSkillPtRemain);
+	DDX_Control(pDX, IDC_CHECK_KIREMONO, m_checkKiremono);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -107,6 +108,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT_KASHIKOSA, &CUmaEvaluatorDlg::OnEnChangeEditKashikosa)
 	ON_CBN_SELCHANGE(IDC_COMBO_STAR, &CUmaEvaluatorDlg::OnCbnSelchangeComboStar)
 	ON_CBN_SELCHANGE(IDC_COMBO_UNIQUE_SKILL_LEVEL, &CUmaEvaluatorDlg::OnCbnSelchangeComboUniqueSkillLevel)
+	ON_BN_CLICKED(IDC_CHECK_KIREMONO, &CUmaEvaluatorDlg::OnBnClickedCheckKiremono)
 END_MESSAGE_MAP()
 
 
@@ -647,7 +649,6 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 	cv::Mat img_finish;
 	cv::resize(img, img_finish, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
-
 	// ウマ娘詳細
 	cv::Mat img_detail(img_finish, cv::Rect(170, 30, 110, 25));
 	wstring sFilePNG = sImgDir + L"detail_bar.png";
@@ -728,6 +729,26 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 			}
 		}
 
+		{ // 切れ者
+			cv::Mat img_condition(img_finish, cv::Rect(65, 390, 110, 15));
+			wstring sFilePNG = sImgDir + L"condition_bar.png";
+			cv::Mat img_condition_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+			if (MatchImage(img_condition, img_condition_ref)) {
+
+				cv::Mat img_condition_frame(img_finish, cv::Rect(0, 410, 450, 390));
+
+				wstring sFilePNG = sImgDir + L"kiremono.png";
+				cv::Mat img_kiremono = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+				if (MatchImage(img_kiremono, img_condition_frame)) {
+					m_checkKiremono.SetCheck(BST_CHECKED);
+				}
+			}
+
+			UpdateSkillList();
+		}
+
 		{ // 固有スキルレベル
 			cv::Mat img_skill(img_finish, cv::Rect(310, 390, 45, 15));
 			wstring sFilePNG = sImgDir + L"skill_bar.png";
@@ -801,6 +822,11 @@ int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem)
 	if (iLv == 3) nPt = int(nPt * 0.7);
 	if (iLv == 4) nPt = int(nPt * 0.65);
 	if (iLv == 5) nPt = int(nPt * 0.6);
+
+	if( m_checkKiremono.GetCheck() == BST_CHECKED ) {
+		nPt -= skill.nPt * 0.1;
+	}
+
 	return nPt;
 }
 
@@ -1162,5 +1188,12 @@ void CUmaEvaluatorDlg::OnCbnSelchangeComboStar()
 
 void CUmaEvaluatorDlg::OnCbnSelchangeComboUniqueSkillLevel()
 {
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckKiremono()
+{
+	UpdateSkillList();
 	UpdateEval();
 }

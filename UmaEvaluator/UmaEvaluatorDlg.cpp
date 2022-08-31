@@ -822,7 +822,8 @@ int CUmaEvaluatorDlg::GetEvalOfSkill(const CSkill& skill) const
 	if (skill.tekisei == SKILL_TEKISEI_NONE)
 		return nEval;
 
-	const CComboBox* combos[8] = {
+	const CComboBox* combos[SKILL_TEKISEI_SIZE] = {
+		NULL, &m_comboTurf,& m_comboDart,
 		&m_comboShort, &m_comboMile, &m_comboMiddle, &m_comboLong,
 		&m_comboNige, &m_comboSenkou, &m_comboSashi, &m_comboOikomi
 	};

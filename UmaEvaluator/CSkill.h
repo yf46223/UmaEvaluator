@@ -15,11 +15,39 @@ enum SKILL_TYPE {
 };
 
 const wstring SKILL_TYPE_STR[] = {
-	L"",
 	L"橙",
 	L"青",
 	L"赤",
 	L"緑",
+};
+
+enum SKILL_TEKISEI {
+	SKILL_TEKISEI_NONE,
+	SKILL_TEKISEI_TURF,
+	SKILL_TEKISEI_DART,
+	SKILL_TEKISEI_SHORT,
+	SKILL_TEKISEI_MILE,
+	SKILL_TEKISEI_MIDDLE,
+	SKILL_TEKISEI_LONG,
+	SKILL_TEKISEI_NIGE,
+	SKILL_TEKISEI_SENKOU,
+	SKILL_TEKISEI_SASHI,
+	SKILL_TEKISEI_OIKOMI,
+	SKILL_TEKISEI_SIZE,
+};
+
+const wstring SKILL_TEKISEI_STR[] = {
+	L"",
+	L"芝",
+	L"ダート",
+	L"短距離",
+	L"マイル",
+	L"中距離",
+	L"長距離",
+	L"逃げ",
+	L"先行",
+	L"差し",
+	L"追込",
 };
 
 class CSkill
@@ -30,6 +58,7 @@ public:
 	int nPt;
 	int nEval;
 	SKILL_TYPE type;
+	SKILL_TEKISEI tekisei;
 	cv::Mat img;
 
 public:
@@ -41,6 +70,18 @@ public:
 				type = SKILL_TYPE(i);
 				return;
 			}
+	}
+
+	void SetTekiseiFromStr(const wstring& s) {
+		for (int i = 0; i < SKILL_TEKISEI_SIZE; ++i)
+			if (s == SKILL_TEKISEI_STR[i]) {
+				tekisei = SKILL_TEKISEI(i);
+				return;
+			}
+	}
+
+	wstring GetTekiseiStr() const {
+		return SKILL_TEKISEI_STR[tekisei];
 	}
 };
 

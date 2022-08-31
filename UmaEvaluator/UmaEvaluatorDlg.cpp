@@ -144,16 +144,18 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 
 	// TODO: 初期化をここに追加します。
 
-	m_listCtrlSkillCandidate.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 100);
-	m_listCtrlSkillCandidate.InsertColumn(1, L"ヒントLv", LVCFMT_LEFT, 50);
-	m_listCtrlSkillCandidate.InsertColumn(2, L"取得Pt"  , LVCFMT_LEFT, 50);
-	m_listCtrlSkillCandidate.InsertColumn(3, L"評価点", LVCFMT_LEFT, 50);
+	m_listCtrlSkillCandidate.InsertColumn(0, L"適性"    , LVCFMT_LEFT, 40);
+	m_listCtrlSkillCandidate.InsertColumn(1, L"スキル名", LVCFMT_LEFT, 100);
+	m_listCtrlSkillCandidate.InsertColumn(2, L"Lv"      , LVCFMT_LEFT, 30);
+	m_listCtrlSkillCandidate.InsertColumn(3, L"取得Pt"  , LVCFMT_LEFT, 50);
+	m_listCtrlSkillCandidate.InsertColumn(4, L"評価点"  , LVCFMT_LEFT, 50);
 	m_listCtrlSkillCandidate.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	m_listCtrlSkillObtain.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 100);
-	m_listCtrlSkillObtain.InsertColumn(1, L"ヒントLv", LVCFMT_LEFT, 50);
-	m_listCtrlSkillObtain.InsertColumn(2, L"取得Pt", LVCFMT_LEFT, 50);
-	m_listCtrlSkillObtain.InsertColumn(3, L"評価点", LVCFMT_LEFT, 50);
+	m_listCtrlSkillObtain.InsertColumn(0, L"適性"    , LVCFMT_LEFT, 40);
+	m_listCtrlSkillObtain.InsertColumn(1, L"スキル名", LVCFMT_LEFT, 100);
+	m_listCtrlSkillObtain.InsertColumn(2, L"Lv"      , LVCFMT_LEFT, 30);
+	m_listCtrlSkillObtain.InsertColumn(3, L"取得Pt"  , LVCFMT_LEFT, 50);
+	m_listCtrlSkillObtain.InsertColumn(4, L"評価点"  , LVCFMT_LEFT, 50);
 	m_listCtrlSkillObtain.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
 	ReadSkillTSV();
@@ -185,10 +187,12 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 		wstringstream iss(line);
 		wstring s;
 		getline(iss, s, L'\t'); skill.idx = stoi(s);
-		getline(iss, s, L'\t'); skill.sName = s;
 		getline(iss, s, L'\t'); skill.nPt = stoi(s);
 		getline(iss, s, L'\t'); skill.nEval = stoi(s);
 		getline(iss, s, L'\t'); skill.SetTypeFromStr(s);
+		getline(iss, s, L'\t'); skill.SetTekiseiFromStr(s);
+		getline(iss, s, L'\t'); skill.sName = s;
+
 		wstring sFilePNG = sSkillDir + to_wstring(skill.idx) + L".png";
 		skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
@@ -229,26 +233,6 @@ void CUmaEvaluatorDlg::ReadUniqLv()
 		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 		m_uniqLv.push_back(img);
 	}
-}
-
-void CUmaEvaluatorDlg::SaveSkillTSV()
-{
-	// スキル情報の書き込み
-	wstring sImgDir = GetImgDir();
-	wstring sSkillDir = sImgDir + L"skills\\";
-	wstring sFileTSV = sSkillDir + L"skills.txt";
-	wofstream ofs(sFileTSV);
-
-	auto Loc = locale("Japanese");
-	auto L = ofs.imbue(Loc);
-
-	for (int i = 0; i < m_skills.size(); ++i) {
-		const CSkill& skill = m_skills[i];
-		ofs << skill.idx << "\t" << skill.sName << "\t" << skill.nPt << "\t" << skill.nEval << endl;
-	}
-
-	ofs.imbue(L);
-	ofs.close();
 }
 
 void CUmaEvaluatorDlg::ReadStatusPointTSV()
@@ -334,7 +318,7 @@ HCURSOR CUmaEvaluatorDlg::OnQueryDragIcon()
 
 
 
-cv::Mat CUmaEvaluatorDlg::GetDesktopImage()
+cv::Mat CUmaEvaluatorDlg::GetDesktopImage() const
 {
 	// モニターサイズ取得
 	HWND desktop = ::GetDesktopWindow();
@@ -375,7 +359,7 @@ cv::Mat CUmaEvaluatorDlg::GetDesktopImage()
 	return img;
 }
 
-cv::Mat CUmaEvaluatorDlg::GetUmaWindowImage()
+cv::Mat CUmaEvaluatorDlg::GetUmaWindowImage() const
 {
 	WCHAR umamusume[] = { L"umamusume" };
 
@@ -419,7 +403,7 @@ double MatchImageRel(const cv::Mat& img, const cv::Mat& img_ref)
 	return dMax;
 }
 
-bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit)
+bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit) const
 {
 	double d = MatchImageRel(img, img_ref);
 	return (d > crit);
@@ -427,7 +411,7 @@ bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref, do
 
 
 
-wstring CUmaEvaluatorDlg::GetExeDir()
+wstring CUmaEvaluatorDlg::GetExeDir() const
 {
 	TCHAR path[MAX_PATH];
 	if (!::GetModuleFileName(NULL, path, MAX_PATH))
@@ -445,7 +429,7 @@ wstring CUmaEvaluatorDlg::GetExeDir()
 	return sDir;
 }
 
-int CUmaEvaluatorDlg::GetTekisei(const cv::Mat& img)
+int CUmaEvaluatorDlg::GetTekisei(const cv::Mat& img) const
 {
 	double R_REF[8] = { 240.0, 244.3, 244.0, 207.9, 196.6, 231.3, 222.7, 214.8 };
 	double G_REF[8] = { 222.9, 212.4, 203.1, 233.4, 225.2, 201.3, 220.6, 214.5 };
@@ -482,7 +466,7 @@ int CUmaEvaluatorDlg::GetTekisei(const cv::Mat& img)
 	return iMin;
 }
 
-int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img)
+int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img) const
 {
 #ifdef _DEBUG
 	return -1;
@@ -514,7 +498,7 @@ int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img)
 	return n;
 }
 
-int CUmaEvaluatorDlg::GetImageSkillLv(const cv::Mat& img)
+int CUmaEvaluatorDlg::GetImageSkillLv(const cv::Mat& img) const
 {
 	double dMax = 0.0;
 	int iMax = 0;
@@ -529,7 +513,7 @@ int CUmaEvaluatorDlg::GetImageSkillLv(const cv::Mat& img)
 	return iMax;
 }
 
-int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img)
+int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img) const
 {
 	double dMax = 0.0;
 	int iMax = 0;
@@ -545,7 +529,7 @@ int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img)
 	return iMax + 1;
 }
 
-int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img)
+int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img) const
 {
 	cv::Mat img_title(img, cv::Rect(60, 5, 100, 15));
 
@@ -565,7 +549,7 @@ int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img)
 	return iMax;
 }
 
-vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_finish)
+vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_finish) const
 {
 	wstring sImgDir = GetImgDir();
 
@@ -621,14 +605,14 @@ vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_
 	return vImages;
 }
 
-CString CUmaEvaluatorDlg::WS2CS(const wstring& ws)
+CString CUmaEvaluatorDlg::WS2CS(const wstring& ws) const
 {
 	CString cs;
 	cs.Format(_T("%s"), ws.c_str());
 	return cs;
 }
 
-CString CUmaEvaluatorDlg::Int2CS(int n)
+CString CUmaEvaluatorDlg::Int2CS(int n) const
 {
 	CString cs;
 	cs.Format(_T("%d"), n);
@@ -813,7 +797,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 	}
 }
 
-int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem)
+int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem) const
 {
 	int iSkill = skillItem.iSkill;
 	int iLv = skillItem.iLv;
@@ -832,6 +816,43 @@ int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem)
 	return nPt;
 }
 
+int CUmaEvaluatorDlg::GetEvalOfSkill(const CSkill& skill) const
+{
+	int nEval = skill.nEval;
+	if (skill.tekisei == SKILL_TEKISEI_NONE)
+		return nEval;
+
+	const CComboBox* combos[8] = {
+		&m_comboShort, &m_comboMile, &m_comboMiddle, &m_comboLong,
+		&m_comboNige, &m_comboSenkou, &m_comboSashi, &m_comboOikomi
+	};
+	int iSel = -1;
+	for (int j = SKILL_TEKISEI_SHORT; j < SKILL_TEKISEI_SIZE; ++j) {
+		if (skill.tekisei == j) iSel = combos[j]->GetCurSel();
+	}
+	double d = 1.0;
+	switch (iSel) {
+	case 0:
+	case 1:
+		d =  1.1;
+		break;
+	case 2:
+	case 3:
+		d = 0.9;
+		break;
+	case 4:
+	case 5:
+	case 6:
+		d = 0.8;
+		break;
+	case 7:
+		d = 0.7;
+		break;
+	}
+
+	return int(round(nEval * d));
+}
+
 void CUmaEvaluatorDlg::UpdateSkillList()
 {
 	m_bOnUpdateSkillList = true;
@@ -846,15 +867,20 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 		int iSkill = m_vSkillItems[i].iSkill;
 		int iLv = m_vSkillItems[i].iLv;
 		const CSkill& skill = m_skills[iSkill];
-		const wstring& ws = skill.sName;
+		const wstring& wsName = skill.sName;
 
 		int nPt = GetSkillObtainPt(m_vSkillItems[i]);
 
+		wstring wsTekisei = skill.GetTekiseiStr();
+		wsTekisei = wsTekisei.substr(0, 1);
+		int nEval = GetEvalOfSkill(skill);
+
 		if (m_vSkillItems[i].bObtain) {
-			m_listCtrlSkillObtain.InsertItem(iObtain, WS2CS(ws));
-			m_listCtrlSkillObtain.SetItemText(iObtain, 1, Int2CS(iLv));
-			m_listCtrlSkillObtain.SetItemText(iObtain, 2, Int2CS(nPt));
-			m_listCtrlSkillObtain.SetItemText(iObtain, 3, Int2CS(skill.nEval));
+			m_listCtrlSkillObtain.InsertItem(iObtain, WS2CS(wsTekisei));
+			m_listCtrlSkillObtain.SetItemText(iObtain, 1, WS2CS(wsName));
+			m_listCtrlSkillObtain.SetItemText(iObtain, 2, Int2CS(iLv));
+			m_listCtrlSkillObtain.SetItemText(iObtain, 3, Int2CS(nPt));
+			m_listCtrlSkillObtain.SetItemText(iObtain, 4, Int2CS(nEval));
 			if (m_vSkillItems[i].bSelected) {
 				m_listCtrlSkillObtain.SetItemState(iObtain, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 			}
@@ -863,10 +889,11 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 			nPtUsed += nPt;
 		}
 		else {
-			m_listCtrlSkillCandidate.InsertItem(iCandidate, WS2CS(ws));
-			m_listCtrlSkillCandidate.SetItemText(iCandidate, 1, Int2CS(iLv));
-			m_listCtrlSkillCandidate.SetItemText(iCandidate, 2, Int2CS(nPt));
-			m_listCtrlSkillCandidate.SetItemText(iCandidate, 3, Int2CS(skill.nEval));
+			m_listCtrlSkillCandidate.InsertItem(iCandidate, WS2CS(wsTekisei));
+			m_listCtrlSkillCandidate.SetItemText(iCandidate, 1, WS2CS(wsName));
+			m_listCtrlSkillCandidate.SetItemText(iCandidate, 2, Int2CS(iLv));
+			m_listCtrlSkillCandidate.SetItemText(iCandidate, 3, Int2CS(nPt));
+			m_listCtrlSkillCandidate.SetItemText(iCandidate, 4, Int2CS(nEval));
 			if (m_vSkillItems[i].bSelected) {
 				m_listCtrlSkillCandidate.SetItemState(iCandidate, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 			}
@@ -1098,7 +1125,7 @@ void CUmaEvaluatorDlg::UpdateEval()
 	}
 }
 
-wstring CUmaEvaluatorDlg::GetRankFromEval(int nEval)
+wstring CUmaEvaluatorDlg::GetRankFromEval(int nEval) const
 {
 	const int RANK_POINT[29] = {
 		0, 300, 600, 900, 1300, 1800, 2300, 2900, 3500, 4900, 6500, 8200, 10000, 12100, // G-A+
@@ -1122,12 +1149,12 @@ wstring CUmaEvaluatorDlg::GetRankFromEval(int nEval)
 	return RANK_STR[iRank];
 }
 
-int CUmaEvaluatorDlg::GetStatusUniqEval()
+int CUmaEvaluatorDlg::GetStatusUniqEval() const
 {
 	int nPt = 0;
 
 	// ステータス評価点
-	CEdit* edits[5] = { &m_editSpeed, &m_editStamina, &m_editPower, &m_editKonjou, &m_editKashikosa };
+	const CEdit* edits[5] = { &m_editSpeed, &m_editStamina, &m_editPower, &m_editKonjou, &m_editKashikosa };
 	for (int i = 0; i < 5; ++i) {
 		CString cs;
 		edits[i]->GetWindowTextW(cs);
@@ -1167,7 +1194,7 @@ int CUmaEvaluatorDlg::GetStatusUniqEval()
 	return nPt;
 }
 
-int CUmaEvaluatorDlg::GetSkillEval()
+int CUmaEvaluatorDlg::GetSkillEval() const
 {
 	int nPt = 0;
 
@@ -1176,7 +1203,9 @@ int CUmaEvaluatorDlg::GetSkillEval()
 		if (!m_vSkillItems[i].bObtain)
 			continue;
 		int iSkill = m_vSkillItems[i].iSkill;
-		nPt += m_skills[iSkill].nEval;
+		const CSkill& skill = m_skills[iSkill];
+		int nEval = GetEvalOfSkill(skill);
+		nPt += nEval;
 	}
 
 	return nPt;

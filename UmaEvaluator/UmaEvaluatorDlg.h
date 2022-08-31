@@ -45,30 +45,30 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV サポート
 
 private:
-	cv::Mat GetDesktopImage();
-	cv::Mat GetUmaWindowImage();
-	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.995);
-	wstring GetExeDir();
-	wstring GetImgDir() { return GetExeDir() + L"img\\"; }
-	int GetTekisei(const cv::Mat& img);
-	int GetNumberOCR(const cv::Mat& img);
+	cv::Mat GetDesktopImage() const;
+	cv::Mat GetUmaWindowImage() const;
+	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.995) const;
+	wstring GetExeDir() const;
+	wstring GetImgDir() const { return GetExeDir() + L"img\\"; }
+	int GetTekisei(const cv::Mat& img) const;
+	int GetNumberOCR(const cv::Mat& img) const;
 	void ReadSkillTSV();
-	void SaveSkillTSV();
 	void ReadSkillLv();
 	void ReadUniqLv();
 	void ReadStatusPointTSV();
-	int GetImageSkillLv(const cv::Mat& img);
-	int GetImageUniqLv(const cv::Mat& img);
-	int GetImageSkill(const cv::Mat& img);
-	vector<pair<cv::Mat, bool> > GetSkillImages(const cv::Mat img_finish);
-	CString WS2CS(const wstring& ws);
-	CString Int2CS(int n);
+	int GetImageSkillLv(const cv::Mat& img) const;
+	int GetImageUniqLv(const cv::Mat& img) const;
+	int GetImageSkill(const cv::Mat& img) const;
+	vector<pair<cv::Mat, bool> > GetSkillImages(const cv::Mat img_finish) const;
+	CString WS2CS(const wstring& ws) const;
+	CString Int2CS(int n) const;
 	void UpdateSkillList();
 	void UpdateEval();
-	int GetSkillObtainPt(const CSkillItem& skillItem);
-	int GetStatusUniqEval();
-	int GetSkillEval();
-	wstring GetRankFromEval(int nEval);
+	int GetSkillObtainPt(const CSkillItem& skillItem) const;
+	int GetStatusUniqEval() const;
+	int GetSkillEval() const;
+	wstring GetRankFromEval(int nEval) const;
+	int GetEvalOfSkill(const CSkill& skill) const;
 
 private:
 	vector<CSkill> m_skills;

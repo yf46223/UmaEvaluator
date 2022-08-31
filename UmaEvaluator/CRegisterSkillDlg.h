@@ -38,4 +38,6 @@ public:
 	afx_msg void OnBnClickedOk();
 	CListCtrl m_listCtrlSkills;
 	CStatic m_picCtrlSkillImage;
+	CEdit m_editNarrow;
+	afx_msg void OnEnChangeEditNarrow();
 };

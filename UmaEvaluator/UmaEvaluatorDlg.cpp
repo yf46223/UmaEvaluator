@@ -175,6 +175,8 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 	auto Loc = locale("Japanese");
 	auto L = ifs.imbue(Loc);
 
+	m_skills.clear();
+
 	wstring line;
 	while (getline(ifs, line)) {
 
@@ -824,7 +826,7 @@ int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem)
 	if (iLv == 5) nPt = int(nPt * 0.6);
 
 	if( m_checkKiremono.GetCheck() == BST_CHECKED ) {
-		nPt -= skill.nPt * 0.1;
+		nPt -= int(skill.nPt * 0.1);
 	}
 
 	return nPt;

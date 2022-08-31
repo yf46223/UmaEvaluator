@@ -49,6 +49,8 @@
 #define IDC_STATIC_SKILL_IMAGE          1033
 #define IDC_STATIC_SKILL_PT_REMAIN      1034
 #define IDC_CHECK_KIREMONO              1035
+#define IDC_EDIT_                       1036
+#define IDC_EDIT_NARROW                 1036
 
 // Next default values for new objects
 // 
@@ -56,7 +58,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1036
+#define _APS_NEXT_CONTROL_VALUE         1037
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

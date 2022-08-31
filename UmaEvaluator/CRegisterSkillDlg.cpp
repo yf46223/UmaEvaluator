@@ -26,6 +26,7 @@ void CRegisterSkillDlg::DoDataExchange(CDataExchange* pDX)
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_LIST_SKILLS, m_listCtrlSkills);
     DDX_Control(pDX, IDC_STATIC_SKILL_IMAGE, m_picCtrlSkillImage);
+    DDX_Control(pDX, IDC_EDIT_NARROW, m_editNarrow);
 }
 
 // CUmaEvaluatorDlg メッセージ ハンドラー
@@ -47,6 +48,7 @@ BOOL CRegisterSkillDlg::OnInitDialog()
 
 BEGIN_MESSAGE_MAP(CRegisterSkillDlg, CDialogEx)
     ON_BN_CLICKED(IDOK, &CRegisterSkillDlg::OnBnClickedOk)
+    ON_EN_CHANGE(IDC_EDIT_NARROW, &CRegisterSkillDlg::OnEnChangeEditNarrow)
 END_MESSAGE_MAP()
 
 int CRegisterSkillDlg::Setup(const cv::Mat& img, const vector<CSkill>& skills)
@@ -111,8 +113,23 @@ static CString WS2CS(const wstring& ws)
 
 void CRegisterSkillDlg::UpdateList()
 {
+    CString cs;
+    m_editNarrow.GetWindowTextW(cs);
+    wstring ws(cs);
+    bool bNarrow = (ws != L"");
+
     m_listCtrlSkills.DeleteAllItems();
     for (int i = 0; i < m_skills.size(); ++i) {
+        if( bNarrow ) {
+            if (m_skills[i].sName.find(ws) == wstring::npos)
+                continue;
+        }
         m_listCtrlSkills.InsertItem(i, WS2CS(m_skills[i].sName));
     }
+}
+
+
+void CRegisterSkillDlg::OnEnChangeEditNarrow()
+{
+    UpdateList();
 }

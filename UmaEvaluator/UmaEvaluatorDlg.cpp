@@ -217,6 +217,10 @@ void CUmaEvaluatorDlg::ReadSkillLv()
 		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 		m_skillLv.push_back(img);
 	}
+
+	wstring sFilePNG = sSkillDir + L"Lv0_gold.png";
+	cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+	m_skillLv.push_back(img);
 }
 
 void CUmaEvaluatorDlg::ReadUniqLv()
@@ -509,6 +513,8 @@ int CUmaEvaluatorDlg::GetImageSkillLv(const cv::Mat& img) const
 			iMax = i;
 		}
 	}
+
+	if (iMax == 6) iMax = 0;
 
 	return iMax;
 }
@@ -803,14 +809,19 @@ int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem) const
 	int iLv = skillItem.iLv;
 	const CSkill& skill = m_skills[skillItem.iSkill];
 	int nPt = skill.nPt;
-	if (iLv == 1) nPt = int(nPt * 0.9);
-	if (iLv == 2) nPt = int(nPt * 0.8);
-	if (iLv == 3) nPt = int(nPt * 0.7);
-	if (iLv == 4) nPt = int(nPt * 0.65);
-	if (iLv == 5) nPt = int(nPt * 0.6);
+
+	// nPtは10の倍数なのでLv4のときに0.5の端数が出る可能性がある
+	int nTenth = nPt / 10;
+	int nReduce = 0;
+	if (iLv == 1) nReduce = nTenth;
+	if (iLv == 2) nReduce = nTenth * 2;
+	if (iLv == 3) nReduce = nTenth * 3;
+	if (iLv == 4) nReduce = int(round(nTenth * 3.5 + 0.1));
+	if (iLv == 5) nReduce = nTenth * 4;
+	nPt -= nReduce;
 
 	if( m_checkKiremono.GetCheck() == BST_CHECKED ) {
-		nPt -= int(skill.nPt * 0.1);
+		nPt -= nTenth;
 	}
 
 	return nPt;

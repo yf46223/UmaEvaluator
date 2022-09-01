@@ -60,9 +60,10 @@ public:
 	SKILL_TYPE type;
 	SKILL_TEKISEI tekisei;
 	cv::Mat img;
+	int iSubSkill;
 
 public:
-	CSkill() : idx(0), nPt(0), nEval(0), type(SKILL_TYPE_UNKNOWN) {}
+	CSkill() : idx(0), nPt(0), nEval(0), type(SKILL_TYPE_UNKNOWN), iSubSkill(-1) {}
 
 	void SetTypeFromStr(const wstring& s) {
 		for (int i = 0; i < SKILL_TYPE_SIZE; ++i)

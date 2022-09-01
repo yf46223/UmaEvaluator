@@ -178,6 +178,7 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 	auto L = ifs.imbue(Loc);
 
 	m_skills.clear();
+	vector<wstring> vsSubSkill;
 
 	wstring line;
 	while (getline(ifs, line)) {
@@ -192,11 +193,29 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 		getline(iss, s, L'\t'); skill.SetTypeFromStr(s);
 		getline(iss, s, L'\t'); skill.SetTekiseiFromStr(s);
 		getline(iss, s, L'\t'); skill.sName = s;
+		getline(iss, s, L'\t');
+		if (s == L"") {
+			if (skill.sName.substr(skill.sName.length() - 1) == L"◎") {
+				s = skill.sName.substr(0, skill.sName.length() - 1) + L"◯";
+			}
+		}
+		vsSubSkill.push_back(s);
 
 		wstring sFilePNG = sSkillDir + to_wstring(skill.idx) + L".png";
 		skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 		m_skills.push_back(skill);
+	}
+
+	for (int i = 0; i < vsSubSkill.size(); ++i) {
+		if (vsSubSkill[i] == L"")
+			continue;
+		for (int j = 0; j < m_skills.size(); ++j) {
+			if (m_skills[j].sName == vsSubSkill[i]) {
+				m_skills[i].iSubSkill = j;
+				break;
+			}
+		}
 	}
 
 	ifs.imbue(L);
@@ -797,8 +816,35 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 				if (!bFound) {
 					m_vSkillItems.push_back(CSkillItem(iSkill, iLv));
 				}
+
+				//○スキルなら◎スキルもあれば追加
+				if (m_skills[iSkill].sName.substr(m_skills[iSkill].sName.length() - 1) == L"◯") {
+					int iDoubleCircle = -1;
+					for (int j = 0; j < m_skills.size(); ++j) {
+						if (m_skills[j].iSubSkill == iSkill && m_skills[j].sName.substr(m_skills[j].sName.length() - 1) == L"◎") {
+							iDoubleCircle = j;
+							break;
+						}
+					}
+					bool bFound = false;
+					for (int j = 0; j < m_vSkillItems.size(); ++j) {
+						if (m_vSkillItems[j].iSkill == iDoubleCircle) {
+							bFound = true;
+							break;
+						}
+					}
+					if (!bFound) {
+						m_vSkillItems.push_back(CSkillItem(iDoubleCircle, iLv));
+					}
+				}
 			}
+
 			UpdateSkillList();
+
+			CSize cs;
+			cs.cx = 0;
+			cs.cy = 100;
+			m_listCtrlSkillCandidate.Scroll(cs);
 		}
 	}
 }
@@ -1029,11 +1075,30 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 
 void CUmaEvaluatorDlg::OnBnClickedButtonToObtain()
 {
+	// 上位スキルで下位スキルが存在する場合は選択して移動させる
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (m_vSkillItems[i].bObtain) continue;
+		if (!m_vSkillItems[i].bSelected) continue;
+
+		int iSkill = m_vSkillItems[i].iSkill;
+		const CSkill& skill = m_skills[iSkill];
+		if (skill.iSubSkill == -1) continue;
+
+		for (int j = 0; j < m_vSkillItems.size(); ++j) {
+			if (m_vSkillItems[j].bObtain) continue;
+
+			if (m_vSkillItems[j].iSkill == skill.iSubSkill ) {
+				m_vSkillItems[j].bSelected = true;
+			}
+		}
+	}
+
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		if (!m_vSkillItems[i].bObtain && m_vSkillItems[i].bSelected) {
 			m_vSkillItems[i].bObtain = true;
 		}
 	}
+
 	UpdateSkillList();
 	UpdateEval();
 
@@ -1069,11 +1134,31 @@ void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillObtain(NMHDR* pNMHDR, LRESUL
 
 void CUmaEvaluatorDlg::OnBnClickedButtonToCandidate()
 {
+	// 下位スキルで上位スキルが存在する場合は選択して移動させる
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (!m_vSkillItems[i].bObtain) continue;
+		if (!m_vSkillItems[i].bSelected) continue;
+
+		int iSkill = m_vSkillItems[i].iSkill;
+		const CSkill& skill = m_skills[iSkill];
+
+		for (int j = 0; j < m_vSkillItems.size(); ++j) {
+			if (!m_vSkillItems[j].bObtain) continue;
+
+			int iUpperSkill = m_vSkillItems[j].iSkill;
+			const CSkill& skillUpper = m_skills[iUpperSkill];
+			if (skillUpper.iSubSkill == iSkill) {
+				m_vSkillItems[j].bSelected = true;
+			}
+		}
+	}
+
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		if (m_vSkillItems[i].bObtain && m_vSkillItems[i].bSelected) {
 			m_vSkillItems[i].bObtain = false;
 		}
 	}
+
 	UpdateSkillList();
 	UpdateEval();
 }

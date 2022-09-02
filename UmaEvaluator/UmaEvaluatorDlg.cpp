@@ -826,6 +826,8 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 							break;
 						}
 					}
+					if (iDoubleCircle < 0)
+						continue;
 					bool bFound = false;
 					for (int j = 0; j < m_vSkillItems.size(); ++j) {
 						if (m_vSkillItems[j].iSkill == iDoubleCircle) {
@@ -841,10 +843,16 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 			UpdateSkillList();
 
+			CRect rc;
+			m_listCtrlSkillCandidate.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
+			int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
+			int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
 			CSize cs;
 			cs.cx = 0;
-			cs.cy = 100;
-			m_listCtrlSkillCandidate.Scroll(cs);
+			cs.cy = offset;
+			if (offset) {
+				m_listCtrlSkillCandidate.Scroll(cs);
+			}
 		}
 	}
 }
@@ -908,7 +916,14 @@ int CUmaEvaluatorDlg::GetEvalOfSkill(const CSkill& skill) const
 		break;
 	}
 
-	return int(round(nEval * d));
+	// 上位スキルの場合は、下位スキルと合算して適性係数をかけた後に下位スキルの分を引く
+	if (skill.iSubSkill > -1) {
+		int nEvalSub = m_skills[skill.iSubSkill].nEval;
+		return int(round((nEval+nEvalSub) * d)) - int(round(nEvalSub * d));
+	}
+	else {
+		return int(round(nEval * d));
+	}
 }
 
 void CUmaEvaluatorDlg::UpdateSkillList()

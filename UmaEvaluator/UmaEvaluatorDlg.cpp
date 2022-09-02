@@ -132,6 +132,8 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CHECK_SASHI, &CUmaEvaluatorDlg::OnBnClickedCheckSashi)
 	ON_BN_CLICKED(IDC_CHECK_OIKOMI, &CUmaEvaluatorDlg::OnBnClickedCheckOikomi)
 	ON_BN_CLICKED(IDC_BUTTON_UNCHECK_UNDER_B, &CUmaEvaluatorDlg::OnBnClickedButtonUncheckUnderB)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_CANDIDATE, &CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillCandidate)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillObtain)
 END_MESSAGE_MAP()
 
 
@@ -1541,4 +1543,86 @@ void CUmaEvaluatorDlg::OnBnClickedButtonUncheckUnderB()
 
 	UpdateSkillList();
 	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLVCUSTOMDRAW lpLvCustomDraw = reinterpret_cast<LPNMLVCUSTOMDRAW>(pNMHDR);
+
+	if (lpLvCustomDraw->nmcd.dwDrawStage == CDDS_PREPAINT)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+		return;
+	}
+
+	if (lpLvCustomDraw->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
+	{
+		SKILL_TYPE type = SKILL_TYPE_UNKNOWN;
+		int j = 0;
+		for (int i = 0; i < m_vSkillItems.size(); ++i) {
+			if (m_vSkillItems[i].bHidden) continue;
+			if (m_vSkillItems[i].bObtain) continue;
+			if (lpLvCustomDraw->nmcd.dwItemSpec == j) {
+				int iSkill = m_vSkillItems[i].iSkill;
+				type = m_skills[iSkill].type;
+				break;
+			}
+			++j;
+		}
+
+		switch (type) {
+		case SKILL_TYPE_ORANGE: lpLvCustomDraw->clrTextBk = RGB(252, 195,  38); break;
+		case SKILL_TYPE_BLUE  : lpLvCustomDraw->clrTextBk = RGB( 32, 220, 253); break;
+		case SKILL_TYPE_RED   : lpLvCustomDraw->clrTextBk = RGB(254, 170, 169); break;
+		case SKILL_TYPE_GREEN : lpLvCustomDraw->clrTextBk = RGB(188, 232,  54); break;
+		default               : lpLvCustomDraw->clrTextBk = GetSysColor(COLOR_WINDOW);
+		}
+
+		*pResult = CDRF_NEWFONT;
+		return;
+	}
+
+	*pResult = 0;
+}
+
+
+void CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLVCUSTOMDRAW lpLvCustomDraw = reinterpret_cast<LPNMLVCUSTOMDRAW>(pNMHDR);
+
+	if (lpLvCustomDraw->nmcd.dwDrawStage == CDDS_PREPAINT)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+		return;
+	}
+
+	if (lpLvCustomDraw->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
+	{
+		SKILL_TYPE type = SKILL_TYPE_UNKNOWN;
+		int j = 0;
+		for (int i = 0; i < m_vSkillItems.size(); ++i) {
+			if (m_vSkillItems[i].bHidden) continue;
+			if (!m_vSkillItems[i].bObtain) continue;
+			if (lpLvCustomDraw->nmcd.dwItemSpec == j) {
+				int iSkill = m_vSkillItems[i].iSkill;
+				type = m_skills[iSkill].type;
+				break;
+			}
+			++j;
+		}
+
+		switch (type) {
+		case SKILL_TYPE_ORANGE: lpLvCustomDraw->clrTextBk = RGB(252, 195, 38); break;
+		case SKILL_TYPE_BLUE  : lpLvCustomDraw->clrTextBk = RGB(32, 220, 253); break;
+		case SKILL_TYPE_RED   : lpLvCustomDraw->clrTextBk = RGB(254, 170, 169); break;
+		case SKILL_TYPE_GREEN : lpLvCustomDraw->clrTextBk = RGB(188, 232, 54); break;
+		default               : lpLvCustomDraw->clrTextBk = GetSysColor(COLOR_WINDOW);
+		}
+
+		*pResult = CDRF_NEWFONT;
+		return;
+	}
+
+	*pResult = 0;
 }

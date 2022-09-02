@@ -160,4 +160,6 @@ public:
 	afx_msg void OnBnClickedCheckOikomi();
 	afx_msg void OnBnClickedButton2();
 	afx_msg void OnBnClickedButtonUncheckUnderB();
+	afx_msg void OnCustomdrawListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnCustomdrawListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult);
 };

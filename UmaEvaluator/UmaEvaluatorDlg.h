@@ -14,11 +14,12 @@ using namespace std;
 
 struct CSkillItem
 {
-	CSkillItem() : iSkill(0), iLv(0), bObtain(false), bSelected(false)
+	CSkillItem() : iSkill(0), iLv(0), bObtain(false), bSelected(false), bHidden(false)
 	{
 	}
 
-	CSkillItem(int iSkill_, int iLv_) : iSkill(iSkill_), iLv(iLv_), bObtain(false), bSelected(false)
+	CSkillItem(int iSkill_, int iLv_) : iSkill(iSkill_), iLv(iLv_), 
+		bObtain(false), bSelected(false), bHidden(false)
 	{
 	}
 
@@ -27,6 +28,7 @@ public:
 	int iLv;
 	bool bObtain;
 	bool bSelected;
+	bool bHidden;
 };
 
 // CUmaEvaluatorDlg ダイアログ
@@ -47,7 +49,7 @@ public:
 private:
 	cv::Mat GetDesktopImage() const;
 	cv::Mat GetUmaWindowImage() const;
-	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.997) const;
+	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.995) const;
 	wstring GetExeDir() const;
 	wstring GetImgDir() const { return GetExeDir() + L"img\\"; }
 	int GetTekisei(const cv::Mat& img) const;
@@ -70,13 +72,14 @@ private:
 	wstring GetRankFromEval(int nEval) const;
 	int GetEvalOfSkill(const CSkill& skill) const;
 	void Detect();
+	void HideSkillItems();
 
 private:
 	vector<CSkill> m_skills;
 	vector<cv::Mat> m_skillLv;
 	vector<cv::Mat> m_uniqLv;
 	vector<int> m_vnStatusPoint;
-	UINT m_timerID;
+	UINT_PTR m_timerID;
 
 	vector<CSkillItem> m_vSkillItems;
 	bool m_bOnUpdateSkillList;
@@ -135,4 +138,26 @@ public:
 	afx_msg void OnBnClickedCheckKiremono();
 	CButton m_buttonDetect;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	CButton m_checkTurf;
+	CButton m_checkDart;
+	CButton m_checkShort;
+	CButton m_checkMile;
+	CButton m_checkMiddle;
+	CButton m_checkLong;
+	CButton m_checkNige;
+	CButton m_checkSenkou;
+	CButton m_checkSashi;
+	CButton m_checkOikomi;
+	afx_msg void OnBnClickedCheckTurf();
+	afx_msg void OnBnClickedCheckDart();
+	afx_msg void OnBnClickedCheckShort();
+	afx_msg void OnBnClickedCheckMile();
+	afx_msg void OnBnClickedCheckMiddle();
+	afx_msg void OnBnClickedCheckLong();
+	afx_msg void OnBnClickedCheckNige();
+	afx_msg void OnBnClickedCheckSenkou();
+	afx_msg void OnBnClickedCheckSashi();
+	afx_msg void OnBnClickedCheckOikomi();
+	afx_msg void OnBnClickedButton2();
+	afx_msg void OnBnClickedButtonUncheckUnderB();
 };

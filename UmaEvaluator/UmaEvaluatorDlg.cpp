@@ -54,7 +54,7 @@ END_MESSAGE_MAP()
 
 
 CUmaEvaluatorDlg::CUmaEvaluatorDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_UMAEVALUATOR_DIALOG, pParent), m_bOnUpdateSkillList(false), m_timerID(-1)
+	: CDialogEx(IDD_UMAEVALUATOR_DIALOG, pParent), m_bOnUpdateSkillList(false), m_timerID(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -89,6 +89,16 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_SKILL_PT_REMAIN, m_stSkillPtRemain);
 	DDX_Control(pDX, IDC_CHECK_KIREMONO, m_checkKiremono);
 	DDX_Control(pDX, IDC_BUTTON_DETECT, m_buttonDetect);
+	DDX_Control(pDX, IDC_CHECK_TURF, m_checkTurf);
+	DDX_Control(pDX, IDC_CHECK_DART, m_checkDart);
+	DDX_Control(pDX, IDC_CHECK_SHORT, m_checkShort);
+	DDX_Control(pDX, IDC_CHECK_MILE, m_checkMile);
+	DDX_Control(pDX, IDC_CHECK_MIDDLE, m_checkMiddle);
+	DDX_Control(pDX, IDC_CHECK_LONG, m_checkLong);
+	DDX_Control(pDX, IDC_CHECK_NIGE, m_checkNige);
+	DDX_Control(pDX, IDC_CHECK_SENKOU, m_checkSenkou);
+	DDX_Control(pDX, IDC_CHECK_SASHI, m_checkSashi);
+	DDX_Control(pDX, IDC_CHECK_OIKOMI, m_checkOikomi);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -111,6 +121,17 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBO_UNIQUE_SKILL_LEVEL, &CUmaEvaluatorDlg::OnCbnSelchangeComboUniqueSkillLevel)
 	ON_BN_CLICKED(IDC_CHECK_KIREMONO, &CUmaEvaluatorDlg::OnBnClickedCheckKiremono)
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_CHECK_TURF, &CUmaEvaluatorDlg::OnBnClickedCheckTurf)
+	ON_BN_CLICKED(IDC_CHECK_DART, &CUmaEvaluatorDlg::OnBnClickedCheckDart)
+	ON_BN_CLICKED(IDC_CHECK_SHORT, &CUmaEvaluatorDlg::OnBnClickedCheckShort)
+	ON_BN_CLICKED(IDC_CHECK_MILE, &CUmaEvaluatorDlg::OnBnClickedCheckMile)
+	ON_BN_CLICKED(IDC_CHECK_MIDDLE, &CUmaEvaluatorDlg::OnBnClickedCheckMiddle)
+	ON_BN_CLICKED(IDC_CHECK_LONG, &CUmaEvaluatorDlg::OnBnClickedCheckLong)
+	ON_BN_CLICKED(IDC_CHECK_NIGE, &CUmaEvaluatorDlg::OnBnClickedCheckNige)
+	ON_BN_CLICKED(IDC_CHECK_SENKOU, &CUmaEvaluatorDlg::OnBnClickedCheckSenkou)
+	ON_BN_CLICKED(IDC_CHECK_SASHI, &CUmaEvaluatorDlg::OnBnClickedCheckSashi)
+	ON_BN_CLICKED(IDC_CHECK_OIKOMI, &CUmaEvaluatorDlg::OnBnClickedCheckOikomi)
+	ON_BN_CLICKED(IDC_BUTTON_UNCHECK_UNDER_B, &CUmaEvaluatorDlg::OnBnClickedButtonUncheckUnderB)
 END_MESSAGE_MAP()
 
 
@@ -159,6 +180,17 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	m_listCtrlSkillObtain.InsertColumn(3, L"取得Pt"  , LVCFMT_LEFT, 50);
 	m_listCtrlSkillObtain.InsertColumn(4, L"評価点"  , LVCFMT_LEFT, 50);
 	m_listCtrlSkillObtain.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+
+	m_checkTurf.SetCheck(BST_CHECKED);
+	m_checkDart.SetCheck(BST_CHECKED);
+	m_checkShort.SetCheck(BST_CHECKED);
+	m_checkMile.SetCheck(BST_CHECKED);
+	m_checkMiddle.SetCheck(BST_CHECKED);
+	m_checkLong.SetCheck(BST_CHECKED);
+	m_checkNige.SetCheck(BST_CHECKED);
+	m_checkSenkou.SetCheck(BST_CHECKED);
+	m_checkSashi.SetCheck(BST_CHECKED);
+	m_checkOikomi.SetCheck(BST_CHECKED);
 
 	ReadSkillTSV();
 	ReadSkillLv();
@@ -959,9 +991,12 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 	int iCandidate = 0;
 	int iObtain = 0;
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (m_vSkillItems[i].bHidden)
+			continue;
 		int iSkill = m_vSkillItems[i].iSkill;
 		int iLv = m_vSkillItems[i].iLv;
 		const CSkill& skill = m_skills[iSkill];
+
 		const wstring& wsName = skill.sName;
 
 		int nPt = GetSkillObtainPt(m_vSkillItems[i]);
@@ -1080,6 +1115,8 @@ void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillCandidate(NMHDR* pNMHDR, LRE
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		if (m_vSkillItems[i].bObtain)
 			continue;
+		if (m_vSkillItems[i].bHidden)
+			continue;
 		++iCandidate;
 		m_vSkillItems[i].bSelected = (siSelected.find(iCandidate) != siSelected.end());
 	}
@@ -1096,7 +1133,7 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 	{
 		vector<CSkillItem> skillsNew;
 		for (int i = 0; i < m_vSkillItems.size(); ++i) {
-			if (m_vSkillItems[i].bObtain || !m_vSkillItems[i].bSelected) {
+			if (m_vSkillItems[i].bObtain || !m_vSkillItems[i].bSelected || m_vSkillItems[i].bHidden) {
 				skillsNew.push_back(m_vSkillItems[i]);
 			}
 		}
@@ -1116,6 +1153,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonToObtain()
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		if (m_vSkillItems[i].bObtain) continue;
 		if (!m_vSkillItems[i].bSelected) continue;
+		if (m_vSkillItems[i].bHidden) continue;
 
 		int iSkill = m_vSkillItems[i].iSkill;
 		const CSkill& skill = m_skills[iSkill];
@@ -1161,6 +1199,8 @@ void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillObtain(NMHDR* pNMHDR, LRESUL
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		if (!m_vSkillItems[i].bObtain)
 			continue;
+		if (m_vSkillItems[i].bHidden)
+			continue;
 		++iObtain;
 		m_vSkillItems[i].bSelected = (siSelected.find(iObtain) != siSelected.end());
 	}
@@ -1175,6 +1215,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonToCandidate()
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		if (!m_vSkillItems[i].bObtain) continue;
 		if (!m_vSkillItems[i].bSelected) continue;
+		if (m_vSkillItems[i].bHidden) continue;
 
 		int iSkill = m_vSkillItems[i].iSkill;
 		const CSkill& skill = m_skills[iSkill];
@@ -1336,6 +1377,8 @@ int CUmaEvaluatorDlg::GetSkillEval() const
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		if (!m_vSkillItems[i].bObtain)
 			continue;
+		if (m_vSkillItems[i].bHidden)
+			continue;
 		int iSkill = m_vSkillItems[i].iSkill;
 		const CSkill& skill = m_skills[iSkill];
 		int nEval = GetEvalOfSkill(skill);
@@ -1371,4 +1414,131 @@ void CUmaEvaluatorDlg::OnTimer(UINT_PTR nIDEvent)
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
+}
+
+void CUmaEvaluatorDlg::HideSkillItems()
+{
+	bool bHideTekisei[SKILL_TEKISEI_SIZE] = {
+		false,
+		m_checkTurf.GetCheck() == BST_UNCHECKED,
+		m_checkDart.GetCheck() == BST_UNCHECKED,
+		m_checkShort.GetCheck() == BST_UNCHECKED,
+		m_checkMile.GetCheck() == BST_UNCHECKED,
+		m_checkMiddle.GetCheck() == BST_UNCHECKED,
+		m_checkLong.GetCheck() == BST_UNCHECKED,
+		m_checkNige.GetCheck() == BST_UNCHECKED,
+		m_checkSenkou.GetCheck() == BST_UNCHECKED,
+		m_checkSashi.GetCheck() == BST_UNCHECKED,
+		m_checkOikomi.GetCheck() == BST_UNCHECKED,
+	};
+
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		int iSkill = m_vSkillItems[i].iSkill;
+		const CSkill skill = m_skills[iSkill];
+		m_vSkillItems[i].bHidden = bHideTekisei[skill.tekisei];
+	}
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckTurf()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckDart()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckShort()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckMile()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckMiddle()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckLong()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckNige()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckSenkou()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckSashi()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedCheckOikomi()
+{
+	HideSkillItems();
+	UpdateSkillList();
+	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedButton2()
+{
+	// TODO: ここにコントロール通知ハンドラー コードを追加します。
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedButtonUncheckUnderB()
+{
+	if (m_comboTurf  .GetCurSel() > 1) m_checkTurf  .SetCheck(BST_UNCHECKED);
+	if (m_comboDart  .GetCurSel() > 1) m_checkDart  .SetCheck(BST_UNCHECKED);
+	if (m_comboShort .GetCurSel() > 1) m_checkShort .SetCheck(BST_UNCHECKED);
+	if (m_comboMile  .GetCurSel() > 1) m_checkMile  .SetCheck(BST_UNCHECKED);
+	if (m_comboMiddle.GetCurSel() > 1) m_checkMiddle.SetCheck(BST_UNCHECKED);
+	if (m_comboLong  .GetCurSel() > 1) m_checkLong  .SetCheck(BST_UNCHECKED);
+	if (m_comboNige  .GetCurSel() > 1) m_checkNige  .SetCheck(BST_UNCHECKED);
+	if (m_comboSenkou.GetCurSel() > 1) m_checkSenkou.SetCheck(BST_UNCHECKED);
+	if (m_comboSashi .GetCurSel() > 1) m_checkSashi .SetCheck(BST_UNCHECKED);
+	if (m_comboOikomi.GetCurSel() > 1) m_checkOikomi.SetCheck(BST_UNCHECKED);
+
+	UpdateSkillList();
+	UpdateEval();
 }

@@ -49,8 +49,18 @@
 #define IDC_STATIC_SKILL_IMAGE          1033
 #define IDC_STATIC_SKILL_PT_REMAIN      1034
 #define IDC_CHECK_KIREMONO              1035
-#define IDC_EDIT_                       1036
 #define IDC_EDIT_NARROW                 1036
+#define IDC_CHECK_TURF                  1037
+#define IDC_CHECK_DART                  1038
+#define IDC_CHECK_SHORT                 1039
+#define IDC_CHECK_NIGE                  1040
+#define IDC_CHECK_MILE                  1041
+#define IDC_CHECK_SENKOU                1042
+#define IDC_CHECK_MIDDLE                1043
+#define IDC_CHECK_SASHI                 1044
+#define IDC_CHECK_OIKOMI                1045
+#define IDC_CHECK_LONG                  1046
+#define IDC_BUTTON_UNCHECK_UNDER_B      1047
 
 // Next default values for new objects
 // 
@@ -58,7 +68,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1037
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

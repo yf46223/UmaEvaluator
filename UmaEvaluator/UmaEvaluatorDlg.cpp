@@ -783,7 +783,7 @@ void CUmaEvaluatorDlg::Detect()
 
 			if (MatchImage(img_skill, img_skill_ref)) {
 
-				cv::Mat img_UniqLv(img_finish, cv::Rect(195, 440, 25, 15));
+				cv::Mat img_UniqLv(img_finish, cv::Rect(195, 440, 10, 15));
 
 				int n = GetImageUniqLv(img_UniqLv);
 				m_comboUniqueSkillLv.SetCurSel(n - 1);

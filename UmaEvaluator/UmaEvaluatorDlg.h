@@ -47,7 +47,7 @@ public:
 private:
 	cv::Mat GetDesktopImage() const;
 	cv::Mat GetUmaWindowImage() const;
-	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.995) const;
+	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.997) const;
 	wstring GetExeDir() const;
 	wstring GetImgDir() const { return GetExeDir() + L"img\\"; }
 	int GetTekisei(const cv::Mat& img) const;
@@ -69,12 +69,14 @@ private:
 	int GetSkillEval() const;
 	wstring GetRankFromEval(int nEval) const;
 	int GetEvalOfSkill(const CSkill& skill) const;
+	void Detect();
 
 private:
 	vector<CSkill> m_skills;
 	vector<cv::Mat> m_skillLv;
 	vector<cv::Mat> m_uniqLv;
 	vector<int> m_vnStatusPoint;
+	UINT m_timerID;
 
 	vector<CSkillItem> m_vSkillItems;
 	bool m_bOnUpdateSkillList;
@@ -131,4 +133,6 @@ public:
 	CStatic m_stSkillPtRemain;
 	CButton m_checkKiremono;
 	afx_msg void OnBnClickedCheckKiremono();
+	CButton m_buttonDetect;
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

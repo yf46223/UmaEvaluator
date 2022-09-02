@@ -54,7 +54,7 @@ END_MESSAGE_MAP()
 
 
 CUmaEvaluatorDlg::CUmaEvaluatorDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_UMAEVALUATOR_DIALOG, pParent), m_bOnUpdateSkillList(false)
+	: CDialogEx(IDD_UMAEVALUATOR_DIALOG, pParent), m_bOnUpdateSkillList(false), m_timerID(-1)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -88,6 +88,7 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_SKILL_PT_USED, m_stSkillPtUsed);
 	DDX_Control(pDX, IDC_STATIC_SKILL_PT_REMAIN, m_stSkillPtRemain);
 	DDX_Control(pDX, IDC_CHECK_KIREMONO, m_checkKiremono);
+	DDX_Control(pDX, IDC_BUTTON_DETECT, m_buttonDetect);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -109,6 +110,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBO_STAR, &CUmaEvaluatorDlg::OnCbnSelchangeComboStar)
 	ON_CBN_SELCHANGE(IDC_COMBO_UNIQUE_SKILL_LEVEL, &CUmaEvaluatorDlg::OnCbnSelchangeComboUniqueSkillLevel)
 	ON_BN_CLICKED(IDC_CHECK_KIREMONO, &CUmaEvaluatorDlg::OnBnClickedCheckKiremono)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -646,6 +648,20 @@ CString CUmaEvaluatorDlg::Int2CS(int n) const
 
 void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 {
+	CString cs;
+	m_buttonDetect.GetWindowTextW(cs);
+	if (cs == L"Detect") {
+		m_timerID = SetTimer(1, 1300, NULL);
+		m_buttonDetect.SetWindowTextW(L"Stop");
+	}
+	else {
+		KillTimer(m_timerID);
+		m_buttonDetect.SetWindowTextW(L"Detect");
+	}
+}
+
+void CUmaEvaluatorDlg::Detect()
+{
 	const int DEFAULT_WIDTH = 450;
 	const int DEFAULT_HEIGHT = 800;
 
@@ -794,6 +810,8 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 
 			vector<pair<cv::Mat, bool> > vImages = GetSkillImages(img_finish);
 
+			bool bUpdate = false;
+
 			for (int i = 0; i < vImages.size(); ++i) {
 
 				const cv::Mat& img_skill_frame = vImages[i].first;
@@ -815,6 +833,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 				}
 				if (!bFound) {
 					m_vSkillItems.push_back(CSkillItem(iSkill, iLv));
+					bUpdate = true;
 				}
 
 				//○スキルなら◎スキルもあれば追加
@@ -837,21 +856,24 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 					}
 					if (!bFound) {
 						m_vSkillItems.push_back(CSkillItem(iDoubleCircle, iLv));
+						bUpdate = true;
 					}
 				}
 			}
 
-			UpdateSkillList();
+			if (bUpdate) {
+				UpdateSkillList();
 
-			CRect rc;
-			m_listCtrlSkillCandidate.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
-			int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
-			int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
-			CSize cs;
-			cs.cx = 0;
-			cs.cy = offset;
-			if (offset) {
-				m_listCtrlSkillCandidate.Scroll(cs);
+				CRect rc;
+				m_listCtrlSkillCandidate.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
+				int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
+				int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
+				CSize cs;
+				cs.cx = 0;
+				cs.cy = offset;
+				if (offset) {
+					m_listCtrlSkillCandidate.Scroll(cs);
+				}
 			}
 		}
 	}
@@ -1339,4 +1361,14 @@ void CUmaEvaluatorDlg::OnBnClickedCheckKiremono()
 {
 	UpdateSkillList();
 	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == m_timerID) {
+		Detect();
+	}
+
+	CDialogEx::OnTimer(nIDEvent);
 }

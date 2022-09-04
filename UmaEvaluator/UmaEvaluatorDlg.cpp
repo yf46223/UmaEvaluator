@@ -1637,17 +1637,6 @@ int CUmaEvaluatorDlg::SelectMaxEval(int nPt, const vector<int>& vnPt, const vect
 
 	int n = vnPt.size();
 
-	int nPtLast = vnPt[n - 1];
-	if (nPt < nPtLast) {
-		vector<int> vnPtRest = vnPt;
-		vector<int> vnEvalRest = vnEval;
-		vector<int> viDependRest = viDepend;
-		vnPtRest.pop_back();
-		vnEvalRest.pop_back();
-		viDependRest.pop_back();
-		return  SelectMaxEval(nPt, vnPtRest, vnEvalRest, viDependRest, viSelect);
-	}
-
 	// n-1番目のスキルを取らなかった場合
 	int nEval1 = 0;
 	vector<int> viSelect1;
@@ -1679,6 +1668,7 @@ int CUmaEvaluatorDlg::SelectMaxEval(int nPt, const vector<int>& vnPt, const vect
 			nEvalSub = vnEval[iSub];
 			nPtSub = vnPt[iSub];
 		}
+		int nPtLast = vnPt[n - 1];
 		if (nPt < nPtLast + nPtSub) {
 			nEval2 = -1;
 		}

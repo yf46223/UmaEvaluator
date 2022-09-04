@@ -134,6 +134,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_UNCHECK_UNDER_B, &CUmaEvaluatorDlg::OnBnClickedButtonUncheckUnderB)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_CANDIDATE, &CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillCandidate)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillObtain)
+	ON_BN_CLICKED(IDC_BUTTON_MAXIMIZE_EVAL, &CUmaEvaluatorDlg::OnBnClickedButtonMaximizeEval)
 END_MESSAGE_MAP()
 
 
@@ -685,7 +686,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 	CString cs;
 	m_buttonDetect.GetWindowTextW(cs);
 	if (cs == L"Detect") {
-		m_timerID = SetTimer(1, 1300, NULL);
+		m_timerID = SetTimer(1, 1000, NULL);
 		m_buttonDetect.SetWindowTextW(L"Stop");
 	}
 	else {
@@ -817,7 +818,7 @@ void CUmaEvaluatorDlg::Detect()
 
 			if (MatchImage(img_skill, img_skill_ref)) {
 
-				cv::Mat img_UniqLv(img_finish, cv::Rect(195, 440, 10, 15));
+				cv::Mat img_UniqLv(img_finish, cv::Rect(210, 440, 10, 15));
 
 				int n = GetImageUniqLv(img_UniqLv);
 				m_comboUniqueSkillLv.SetCurSel(n - 1);
@@ -1625,4 +1626,183 @@ void CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* p
 	}
 
 	*pResult = 0;
+}
+
+int CUmaEvaluatorDlg::SelectMaxEval(int nPt, const vector<int>& vnPt, const vector<int>& vnEval, const vector<int>& viDepend, vector<int>& viSelect)
+{
+	if (nPt <= 0 || vnPt.empty()) {
+		viSelect.clear();
+		return 0;
+	}
+
+	int n = vnPt.size();
+
+	int nPtLast = vnPt[n - 1];
+	if (nPt < nPtLast) {
+		vector<int> vnPtRest = vnPt;
+		vector<int> vnEvalRest = vnEval;
+		vector<int> viDependRest = viDepend;
+		vnPtRest.pop_back();
+		vnEvalRest.pop_back();
+		viDependRest.pop_back();
+		return  SelectMaxEval(nPt, vnPtRest, vnEvalRest, viDependRest, viSelect);
+	}
+
+	// n-1番目のスキルを取らなかった場合
+	int nEval1 = 0;
+	vector<int> viSelect1;
+	{
+		vector<int> vnPtRest = vnPt;
+		vector<int> vnEvalRest = vnEval;
+		vector<int> viDependRest = viDepend;
+		vnPtRest.pop_back();
+		vnEvalRest.pop_back();
+		viDependRest.pop_back();
+		// n-1番目のスキルに上位スキルがある場合は除外
+		for (int i = 0; i < n - 1; ++i) {
+			if (viDependRest[i] == n - 1)
+				vnPtRest[i] = 100000; // 取得Ptを大きくして実質除外
+		}
+		nEval1 = SelectMaxEval(nPt, vnPtRest, vnEvalRest, viDependRest, viSelect1);
+	}
+
+	// n-1番目のスキルを取った場合
+	int nEval2 = 0;
+	int iSub = -1;
+	vector<int> viSelect2;
+	{
+		// n-1番目のスキルが上位スキルの場合は下位スキルも取る
+		int nPtSub = 0;
+		int nEvalSub = 0;
+		if (-1 < viDepend[n-1] && viDepend[n - 1] < n - 1) {
+			iSub = viDepend[n - 1];
+			nEvalSub = vnEval[iSub];
+			nPtSub = vnPt[iSub];
+		}
+		if (nPt < nPtLast + nPtSub) {
+			nEval2 = -1;
+		}
+		else {
+			vector<int> vnPtRest = vnPt;
+			vector<int> vnEvalRest = vnEval;
+			vector<int> viDependRest = viDepend;
+			vnPtRest.pop_back();
+			vnEvalRest.pop_back();
+			viDependRest.pop_back();
+			nEval2 = vnEval[n-1] + nEvalSub + SelectMaxEval(nPt - nPtLast - nPtSub, vnPtRest, vnEvalRest, viDependRest, viSelect2);
+		}
+	}
+
+	if (nEval1 > nEval2) {
+		viSelect = viSelect1;
+		return nEval1;
+	}
+	else {
+		viSelect = viSelect2;
+		viSelect.push_back(n - 1);
+		if (iSub > -1)
+			viSelect.push_back(iSub);
+		return nEval2;
+	}
+}
+
+void CUmaEvaluatorDlg::OnBnClickedButtonMaximizeEval()
+{
+	CString cs;
+	m_editSkillPt.GetWindowTextW(cs);
+	if (cs == L"") {
+		MessageBox(L"スキルPtを入力してください。");
+		return;
+	}
+	int nSkillPt = _ttoi(cs);
+
+	int nPtUsed = 0;
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if ( m_vSkillItems[i].bHidden) continue;
+		if (!m_vSkillItems[i].bObtain) continue;
+		int nPt = GetSkillObtainPt(m_vSkillItems[i]);
+		nPtUsed += nPt;
+	}
+
+	int nPtRemain = nSkillPt - nPtUsed;
+
+	vector<CSkillItem> vSkillItems = m_vSkillItems;
+
+	// 残りポイントが1000以下になるまで評価点効率のいいものを確定する(上位スキルは含めない)
+	set<int> siEfficients;
+	{
+		multimap<double, int> mmEfficiency;
+		vector<int> vnPt(vSkillItems.size(), 0.0);
+		for (int i = 0; i < vSkillItems.size(); ++i) {
+			if (vSkillItems[i].bHidden) continue;
+			if (vSkillItems[i].bObtain) continue;
+			const CSkill& skill = m_skills[vSkillItems[i].iSkill];
+			if (skill.iSubSkill > -1) continue;
+			int nPt = GetSkillObtainPt(vSkillItems[i]);
+			int nEval = GetEvalOfSkill(skill);
+			double e = (double)nPt / (double)nEval; //昇順にするために逆数にする
+			mmEfficiency.insert(pair<double, int>(e, i));
+			vnPt[i] = nPt;
+		}
+
+		multimap<double, int>::iterator it = mmEfficiency.begin();
+		for (; it != mmEfficiency.end(); ++it) {
+			if (nPtRemain < 1000)
+				break;
+			int i = it->second;
+			nPtRemain -= vnPt[i];
+			siEfficients.insert(i);
+			vSkillItems[i].bObtain = true;
+		}
+	}
+
+	vector<int> viPart(vSkillItems.size(), -1);
+	vector<int> vnPt;
+	vector<int> vnEval;
+	for (int i = 0; i < vSkillItems.size(); ++i) {
+		if (vSkillItems[i].bHidden) continue;
+		if (vSkillItems[i].bObtain) continue;
+		const CSkill& skill = m_skills[vSkillItems[i].iSkill];
+		int nPt = GetSkillObtainPt(vSkillItems[i]);
+		int nEval = GetEvalOfSkill(skill);
+		viPart[i] = vnPt.size();
+		vnPt.push_back(nPt);
+		vnEval.push_back(nEval);
+	}
+
+	vector<int> viDepend(vnPt.size(), -1);
+	for (int i = 0; i < vSkillItems.size(); ++i) {
+		if (vSkillItems[i].bHidden) continue;
+		if (vSkillItems[i].bObtain) continue;
+		const CSkill& skill = m_skills[vSkillItems[i].iSkill];
+		if (skill.iSubSkill == -1)
+			continue;
+		for (int j = 0; j < vSkillItems.size(); ++j) {
+			if (vSkillItems[j].bHidden) continue;
+			if (vSkillItems[j].bObtain) continue;
+			if (vSkillItems[j].iSkill == skill.iSubSkill) {
+				int iPart = viPart[i];
+				int jPart = viPart[j];
+				if (iPart > -1 && jPart > -1) {
+					viDepend[iPart] = jPart;
+				}
+			}
+		}
+	}
+
+	vector<int> viSelect;
+	int nEval = SelectMaxEval(nPtRemain, vnPt, vnEval, viDepend, viSelect);
+
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (m_vSkillItems[i].bHidden) continue;
+		if (m_vSkillItems[i].bObtain) continue;
+		m_vSkillItems[i].bSelected = false;
+		if (siEfficients.find(i) != siEfficients.end())
+			m_vSkillItems[i].bSelected = true;
+		if (find(viSelect.begin(), viSelect.end(), viPart[i]) != viSelect.end())
+			m_vSkillItems[i].bSelected = true;
+	}
+
+	UpdateSkillList();
+
 }

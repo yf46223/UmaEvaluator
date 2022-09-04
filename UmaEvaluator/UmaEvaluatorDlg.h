@@ -73,6 +73,7 @@ private:
 	int GetEvalOfSkill(const CSkill& skill) const;
 	void Detect();
 	void HideSkillItems();
+	int SelectMaxEval(int nPt, const vector<int>& vnPt, const vector<int>& vnEval, const vector<int>& viDepend, vector<int>& viSelect);
 
 private:
 	vector<CSkill> m_skills;
@@ -162,4 +163,5 @@ public:
 	afx_msg void OnBnClickedButtonUncheckUnderB();
 	afx_msg void OnCustomdrawListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnCustomdrawListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedButtonMaximizeEval();
 };

@@ -11,6 +11,7 @@
 #define IDC_BUTTON1                     1000
 #define IDC_BUTTON_DETECT               1000
 #define IDC_BUTTON_SKILL_REGISTRATION   1001
+#define IDC_BUTTON_MAXIMIZE_EVAL        1002
 #define IDC_COMBO_TURF                  1006
 #define IDC_EDIT_SPEED                  1007
 #define IDC_COMBO_SHORT                 1008

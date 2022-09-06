@@ -453,19 +453,19 @@ cv::Mat CUmaEvaluatorDlg::GetUmaWindowImage() const
 	return cv::Mat(desktop, cv::Rect(ppt.x, ppt.y, width, height));
 }
 
-double MatchImageRel(const cv::Mat& img, const cv::Mat& img_ref)
+double MatchImageRel(const cv::Mat& img_templ, const cv::Mat& img_ref)
 {
 	cv::Mat result;
-	cv::matchTemplate(img, img_ref, result, cv::TM_CCORR_NORMED);
+	cv::matchTemplate(img_ref, img_templ, result, cv::TM_CCORR_NORMED);
 
 	double dMin, dMax;
 	cv::minMaxLoc(result, &dMin, &dMax);
 	return dMax;
 }
 
-bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit) const
+bool CUmaEvaluatorDlg::MatchImage(const cv::Mat& img_templ, const cv::Mat& img, double crit) const
 {
-	double d = MatchImageRel(img, img_ref);
+	double d = MatchImageRel(img_templ, img);
 	return (d > crit);
 }
 
@@ -593,7 +593,8 @@ int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img) const
 
 int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img) const
 {
-	cv::Mat img_title(img, cv::Rect(60, 5, 100, 15));
+	//上下1ピクセルずつ削って、ずれた場合もチェックする
+	cv::Mat img_title(img, cv::Rect(60, 6, 100, 13));
 
 	double dMax = 0.0;
 	int iMax = -1;

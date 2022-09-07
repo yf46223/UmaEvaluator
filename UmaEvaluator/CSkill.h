@@ -60,6 +60,7 @@ public:
 	SKILL_TYPE type;
 	SKILL_TEKISEI tekisei;
 	cv::Mat img;
+	cv::Mat img_title;
 	int iSubSkill;
 
 public:

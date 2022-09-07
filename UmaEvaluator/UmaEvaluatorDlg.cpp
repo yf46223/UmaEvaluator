@@ -255,6 +255,15 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 		}
 	}
 
+	for (int i = 0; i < m_skills.size(); ++i) {
+		if (m_skills[i].img.empty())
+			continue;
+		cv::Mat img_title(m_skills[i].img, cv::Rect(60, 4, 120, 17));
+		cv::Mat img_title_resize;
+		cv::resize(img_title, img_title_resize, cv::Size(240, 34));
+		m_skills[i].img_title = img_title_resize;
+	}
+
 	ifs.imbue(L);
 	ifs.close();
 }
@@ -584,7 +593,6 @@ int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img) const
 		if (d > dMax) {
 			dMax = d;
 			iMax = i;
-
 		}
 	}
 
@@ -593,17 +601,20 @@ int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img) const
 
 int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img) const
 {
-	//上下1ピクセルずつ削って、ずれた場合もチェックする
-	cv::Mat img_title(img, cv::Rect(60, 6, 100, 13));
+	cv::Mat img_title(img, cv::Rect(60, 5, 120, 15));
+
+	//解像度が低いと誤検出が多いので倍のサイズにする
+	cv::Mat img_title_resize;
+	cv::resize(img_title, img_title_resize, cv::Size(240, 30));
 
 	double dMax = 0.0;
 	int iMax = -1;
 	for (int i = 0; i < m_skills.size(); ++i) {
 		if (m_skills[i].img.empty())
 			continue;
-		cv::Mat img_title_ref(m_skills[i].img, cv::Rect(60, 5, 100, 15));
-		double d = MatchImageRel(img_title, img_title_ref);
-		if (d > max(dMax, 0.98) ) {
+
+		double d = MatchImageRel(img_title_resize, m_skills[i].img_title);
+		if (d > max(dMax, 0.99)) {
 			dMax = d;
 			iMax = i;
 		}
@@ -857,20 +868,7 @@ void CUmaEvaluatorDlg::Detect()
 				if (iSkill < 0)
 					continue;
 
-				cv::Mat img_Lv(img_skill_frame, cv::Rect(365, 2, 10, 15));
-				int iLv = GetImageSkillLv(img_Lv);
-
-				bool bFound = false;
-				for (int j = 0; j < m_vSkillItems.size(); ++j) {
-					if (m_vSkillItems[j].iSkill == iSkill) {
-						bFound = true;
-						break;
-					}
-				}
-				if (!bFound) {
-					m_vSkillItems.push_back(CSkillItem(iSkill, iLv));
-					bUpdate = true;
-				}
+				vector<int> viSkills;
 
 				//○スキルなら◎スキルもあれば追加
 				if (m_skills[iSkill].sName.substr(m_skills[iSkill].sName.length() - 1) == L"◯") {
@@ -881,17 +879,26 @@ void CUmaEvaluatorDlg::Detect()
 							break;
 						}
 					}
-					if (iDoubleCircle < 0)
-						continue;
+					if (iDoubleCircle > -1) {
+						viSkills.push_back(iDoubleCircle);
+					}
+				}
+				viSkills.push_back(iSkill);
+
+				cv::Mat img_Lv(img_skill_frame, cv::Rect(365, 2, 10, 15));
+				int iLv = GetImageSkillLv(img_Lv);
+
+				for (int j = 0; j < viSkills.size(); ++j) {
+					int iSkill = viSkills[j];
 					bool bFound = false;
 					for (int j = 0; j < m_vSkillItems.size(); ++j) {
-						if (m_vSkillItems[j].iSkill == iDoubleCircle) {
+						if (m_vSkillItems[j].iSkill == iSkill) {
 							bFound = true;
 							break;
 						}
 					}
 					if (!bFound) {
-						m_vSkillItems.push_back(CSkillItem(iDoubleCircle, iLv));
+						m_vSkillItems.push_back(CSkillItem(iSkill, iLv));
 						bUpdate = true;
 					}
 				}
@@ -1636,7 +1643,7 @@ int CUmaEvaluatorDlg::SelectMaxEval(int nPt, const vector<int>& vnPt, const vect
 		return 0;
 	}
 
-	int n = vnPt.size();
+	int n = (int)vnPt.size();
 
 	// n-1番目のスキルを取らなかった場合
 	int nEval1 = 0;
@@ -1723,7 +1730,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonMaximizeEval()
 	set<int> siEfficients;
 	{
 		multimap<double, int> mmEfficiency;
-		vector<int> vnPt(vSkillItems.size(), 0.0);
+		vector<int> vnPt(vSkillItems.size(), 0);
 		for (int i = 0; i < vSkillItems.size(); ++i) {
 			if (vSkillItems[i].bHidden) continue;
 			if (vSkillItems[i].bObtain) continue;
@@ -1756,7 +1763,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonMaximizeEval()
 		const CSkill& skill = m_skills[vSkillItems[i].iSkill];
 		int nPt = GetSkillObtainPt(vSkillItems[i]);
 		int nEval = GetEvalOfSkill(skill);
-		viPart[i] = vnPt.size();
+		viPart[i] = (int)vnPt.size();
 		vnPt.push_back(nPt);
 		vnEval.push_back(nEval);
 	}

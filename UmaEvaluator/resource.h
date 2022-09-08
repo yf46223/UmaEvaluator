@@ -51,6 +51,8 @@
 #define IDC_STATIC_SKILL_PT_REMAIN      1034
 #define IDC_CHECK_KIREMONO              1035
 #define IDC_EDIT_NARROW                 1036
+#define IDC_STATIC_SKILL_IMAGE2         1036
+#define IDC_STATIC_SKILL_IMAGE_HOVER    1036
 #define IDC_CHECK_TURF                  1037
 #define IDC_CHECK_DART                  1038
 #define IDC_CHECK_SHORT                 1039

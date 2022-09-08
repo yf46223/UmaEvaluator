@@ -72,8 +72,6 @@ int CRegisterSkillDlg::Setup(const cv::Mat& img, const vector<CSkill>& skills)
 
     int idx = (DoModal() == IDOK) ? m_idx : -1;
 
-    cv::destroyAllWindows();
-
     return idx;
 }
 

@@ -99,6 +99,7 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECK_SENKOU, m_checkSenkou);
 	DDX_Control(pDX, IDC_CHECK_SASHI, m_checkSashi);
 	DDX_Control(pDX, IDC_CHECK_OIKOMI, m_checkOikomi);
+	DDX_Control(pDX, IDC_STATIC_SKILL_IMAGE_HOVER, m_picCtrlSkillImageHover);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -135,6 +136,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_CANDIDATE, &CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillCandidate)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillObtain)
 	ON_BN_CLICKED(IDC_BUTTON_MAXIMIZE_EVAL, &CUmaEvaluatorDlg::OnBnClickedButtonMaximizeEval)
+	ON_NOTIFY(LVN_HOTTRACK, IDC_LIST_CTRL_SKILL_CANDIDATE, &CUmaEvaluatorDlg::OnLvnHotTrackListCtrlSkillCandidate)
 END_MESSAGE_MAP()
 
 
@@ -199,7 +201,7 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	ReadSkillLv();
 	ReadStatusPointTSV();
 	ReadUniqLv();
-
+	
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
 }
 
@@ -1803,4 +1805,46 @@ void CUmaEvaluatorDlg::OnBnClickedButtonMaximizeEval()
 
 	UpdateSkillList();
 
+}
+
+void CUmaEvaluatorDlg::OnLvnHotTrackListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+	int iItem = pNMLV->iItem;
+	if (iItem < 0) {
+		*pResult = 0;
+		return;
+	}
+
+	CString cs = m_listCtrlSkillCandidate.GetItemText(iItem, 1);
+	wstring ws(cs);
+
+	for (int i = 0; i < m_skills.size(); ++i) {
+		if (m_skills[i].img.empty())
+			continue;
+		if (m_skills[i].sName == ws) {
+			const cv::Mat& img = m_skills[i].img;
+
+			// cv::Mat -> CBitmap
+			char* ColorBuf = (char*)calloc(img.rows * img.rows * 4, sizeof(RGBQUAD));
+			for (int y = 0; y < img.rows; y++) {
+				for (int x = 0; x < img.cols; x++) {
+					ColorBuf[y * img.cols * 4 + x * 4 + 0] = img.data[y * img.step + x * 3 + 0]; // B
+					ColorBuf[y * img.cols * 4 + x * 4 + 1] = img.data[y * img.step + x * 3 + 1]; // G
+					ColorBuf[y * img.cols * 4 + x * 4 + 2] = img.data[y * img.step + x * 3 + 2]; // R
+					ColorBuf[y * img.cols * 4 + x * 4 + 3] = 0;
+				}
+			}
+
+			CBitmap bmp;
+			bmp.CreateBitmap(img.cols, img.rows, 1, 32, ColorBuf);
+			free(ColorBuf);
+
+			m_picCtrlSkillImageHover.SetBitmap(bmp);
+			break;
+		}
+	}
+
+	*pResult = 0;
 }

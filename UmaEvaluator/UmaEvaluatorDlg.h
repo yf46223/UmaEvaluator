@@ -164,4 +164,6 @@ public:
 	afx_msg void OnCustomdrawListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnCustomdrawListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedButtonMaximizeEval();
+	afx_msg void OnLvnHotTrackListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
+	CStatic m_picCtrlSkillImageHover;
 };

@@ -64,7 +64,7 @@ public:
 	int iSubSkill;
 
 public:
-	CSkill() : idx(0), nPt(0), nEval(0), type(SKILL_TYPE_UNKNOWN), iSubSkill(-1) {}
+	CSkill() : idx(0), nPt(0), nEval(0), type(SKILL_TYPE_UNKNOWN), iSubSkill(-1), tekisei(SKILL_TEKISEI_NONE) {}
 
 	void SetTypeFromStr(const wstring& s) {
 		for (int i = 0; i < SKILL_TYPE_SIZE; ++i)

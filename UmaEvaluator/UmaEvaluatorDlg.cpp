@@ -697,13 +697,13 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 {
 	CString cs;
 	m_buttonDetect.GetWindowTextW(cs);
-	if (cs == L"Detect") {
+	if (cs == L"検出") {
 		m_timerID = SetTimer(1, 1000, NULL);
-		m_buttonDetect.SetWindowTextW(L"Stop");
+		m_buttonDetect.SetWindowTextW(L"停止");
 	}
 	else {
 		KillTimer(m_timerID);
-		m_buttonDetect.SetWindowTextW(L"Detect");
+		m_buttonDetect.SetWindowTextW(L"検出");
 	}
 }
 

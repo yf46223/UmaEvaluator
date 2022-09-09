@@ -51,7 +51,8 @@ private:
 	cv::Mat GetUmaWindowImage() const;
 	bool MatchImage(const cv::Mat& img, const cv::Mat& img_ref, double crit = 0.995) const;
 	wstring GetExeDir() const;
-	wstring GetImgDir() const { return GetExeDir() + L"img\\"; }
+	wstring GetDataDir() const { return GetExeDir() + L"data\\"; }
+	wstring GetImgDir() const { return GetDataDir() + L"img\\"; }
 	int GetTekisei(const cv::Mat& img) const;
 	int GetNumberOCR(const cv::Mat& img) const;
 	void ReadSkillTSV();

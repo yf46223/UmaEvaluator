@@ -208,9 +208,9 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 void CUmaEvaluatorDlg::ReadSkillTSV()
 {
 	// スキル情報の読み込み
-	wstring sImgDir = GetImgDir();
-	wstring sSkillDir = sImgDir + L"skills\\";
-	wstring sFileTSV = sSkillDir + L"skills.txt";
+	wstring sDataDir = GetDataDir();
+	wstring sSkillDir = sDataDir + L"skills\\";
+	wstring sFileTSV = sDataDir + L"skills.txt";
 	wifstream ifs(sFileTSV);
 
 	auto Loc = locale("Japanese");
@@ -276,16 +276,15 @@ void CUmaEvaluatorDlg::ReadSkillLv()
 
 	// スキルレベル画像の読み込み
 	wstring sImgDir = GetImgDir();
-	wstring sSkillDir = sImgDir + L"skills\\";
 
 	for (int i = 0; i < 6; ++i) {
 		wstring si = to_wstring(i);
-		wstring sFilePNG = sSkillDir + L"Lv" + si + L".png";
+		wstring sFilePNG = sImgDir + L"Lv" + si + L".png";
 		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 		m_skillLv.push_back(img);
 	}
 
-	wstring sFilePNG = sSkillDir + L"Lv0_gold.png";
+	wstring sFilePNG = sImgDir + L"Lv0_gold.png";
 	cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 	m_skillLv.push_back(img);
 }
@@ -296,11 +295,10 @@ void CUmaEvaluatorDlg::ReadUniqLv()
 
 	// 固有スキルレベル画像の読み込み
 	wstring sImgDir = GetImgDir();
-	wstring sSkillDir = sImgDir + L"skills\\";
 
 	for (int i = 0; i < 6; ++i) {
 		wstring si = to_wstring(i+1);
-		wstring sFilePNG = sSkillDir + L"uniqLv" + si + L".png";
+		wstring sFilePNG = sImgDir + L"uniqLv" + si + L".png";
 		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 		m_uniqLv.push_back(img);
 	}
@@ -310,8 +308,8 @@ void CUmaEvaluatorDlg::ReadStatusPointTSV()
 {
 	m_vnStatusPoint.resize(1201);
 
-	wstring sImgDir = GetImgDir();
-	wstring sFileTSV = sImgDir + L"status_point.txt";
+	wstring sDataDir = GetDataDir();
+	wstring sFileTSV = sDataDir + L"status_point.txt";
 	wifstream ifs(sFileTSV);
 
 	auto Loc = locale("Japanese");
@@ -714,7 +712,6 @@ void CUmaEvaluatorDlg::Detect()
 	const int DEFAULT_WIDTH = 450;
 	const int DEFAULT_HEIGHT = 800;
 
-	wstring sBinDir = GetExeDir();
 	wstring sImgDir = GetImgDir();
 
 	cv::Mat img = GetUmaWindowImage();
@@ -1066,7 +1063,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 	const int DEFAULT_WIDTH = 450;
 	const int DEFAULT_HEIGHT = 800;
 
-	wstring sBinDir = GetExeDir();
+	wstring sDataDir = GetDataDir();
 	wstring sImgDir = GetImgDir();
 
 	cv::Mat img = GetUmaWindowImage();
@@ -1100,7 +1097,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 		if (idx < 0)
 			continue;
 
-		wstring sSkillDir = sImgDir + L"skills\\";
+		wstring sSkillDir = sDataDir + L"skills\\";
 		wstring sFilePNG = sSkillDir + to_wstring(idx)+ L".png";
 		cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
 	}

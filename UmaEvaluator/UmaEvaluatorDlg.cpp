@@ -733,13 +733,12 @@ vector<cv::Mat> CUmaEvaluatorDlg::GetSkillImagesAcquired(const cv::Mat img_finis
 	wstring sImgDir = GetImgDir();
 
 	// 固有スキルはいれたくないので２番めから検出
-	//cv::Mat img_acquired(img_finish, cv::Rect(390, 320, 35, 280));
-	cv::Mat img_acquired(img_finish, cv::Rect(345, 420, 40, 160));
+	cv::Mat img_acquired(img_finish, cv::Rect(345, 350, 40, 240));
 
 	wstring sFilePNG = sImgDir + L"acquired.png";
 	cv::Mat img_acquired_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
-	vector<cv::Mat> vImages;
+	set<int> siAcquiredY;
 	for (int i = 0; i < 3; ++i) {
 		cv::Mat result;
 		cv::matchTemplate(img_acquired, img_acquired_ref, result, cv::TM_CCORR_NORMED);
@@ -751,11 +750,16 @@ vector<cv::Mat> CUmaEvaluatorDlg::GetSkillImagesAcquired(const cv::Mat img_finis
 		if (d < 0.99)
 			break;
 
-		cv::Mat img(img_finish, cv::Rect(20, p.y + 380, 410, 95));
-		vImages.push_back(img);
+		siAcquiredY.insert(p.y);
 
 		cv::Point p1(40, p.y + 10);
 		cv::rectangle(img_acquired, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
+	}
+
+	vector<cv::Mat> vImages;
+	for (set<int>::iterator it = siAcquiredY.begin(); it != siAcquiredY.end(); ++it) {
+		cv::Mat img(img_finish, cv::Rect(20, *it + 310, 410, 95));
+		vImages.push_back(img);
 	}
 
 	return vImages;
@@ -2126,7 +2130,7 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT*
 	{
 		vector<CSkillItem> skillsNew;
 		for (int i = 0; i < m_vSkillItemsAcquired.size(); ++i) {
-			if (m_vSkillItems[i].bObtain || !m_vSkillItems[i].bSelected || m_vSkillItems[i].bHidden) {
+			if (!m_vSkillItemsAcquired[i].bSelected) {
 				skillsNew.push_back(m_vSkillItemsAcquired[i]);
 			}
 		}

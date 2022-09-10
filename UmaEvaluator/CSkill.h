@@ -61,6 +61,8 @@ public:
 	SKILL_TEKISEI tekisei;
 	cv::Mat img;
 	cv::Mat img_title;
+	cv::Mat img_acquired;
+	cv::Mat img_acquired_title;
 	int iSubSkill;
 
 public:

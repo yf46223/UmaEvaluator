@@ -100,6 +100,8 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECK_SASHI, m_checkSashi);
 	DDX_Control(pDX, IDC_CHECK_OIKOMI, m_checkOikomi);
 	DDX_Control(pDX, IDC_STATIC_SKILL_IMAGE_HOVER, m_picCtrlSkillImageHover);
+	DDX_Control(pDX, IDC_LIST_CTRL_SKILL_ACQUIRED, m_listCtrlSkillAcquired);
+	DDX_Control(pDX, IDC_STATIC_SKILL_EVAL_AQUIRED, m_stSkillAcquiredEval);
 }
 
 BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
@@ -137,6 +139,10 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillObtain)
 	ON_BN_CLICKED(IDC_BUTTON_MAXIMIZE_EVAL, &CUmaEvaluatorDlg::OnBnClickedButtonMaximizeEval)
 	ON_NOTIFY(LVN_HOTTRACK, IDC_LIST_CTRL_SKILL_CANDIDATE, &CUmaEvaluatorDlg::OnLvnHotTrackListCtrlSkillCandidate)
+	ON_BN_CLICKED(IDC_BUTTON_SKILL_REGISTRATION_ACQUIRED, &CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistrationAcquired)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnNMCustomdrawListCtrlSkillAcquired)
+	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillAcquired)
 END_MESSAGE_MAP()
 
 
@@ -185,6 +191,11 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	m_listCtrlSkillObtain.InsertColumn(3, L"取得Pt"  , LVCFMT_LEFT, 50);
 	m_listCtrlSkillObtain.InsertColumn(4, L"評価点"  , LVCFMT_LEFT, 50);
 	m_listCtrlSkillObtain.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+
+	m_listCtrlSkillAcquired.InsertColumn(0, L"適性", LVCFMT_LEFT, 40);
+	m_listCtrlSkillAcquired.InsertColumn(1, L"スキル名", LVCFMT_LEFT, 100);
+	m_listCtrlSkillAcquired.InsertColumn(2, L"評価点", LVCFMT_LEFT, 50);
+	m_listCtrlSkillAcquired.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
 	m_checkTurf.SetCheck(BST_CHECKED);
 	m_checkDart.SetCheck(BST_CHECKED);
@@ -240,8 +251,15 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 		}
 		vsSubSkill.push_back(s);
 
-		wstring sFilePNG = sSkillDir + to_wstring(skill.idx) + L".png";
-		skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		{
+			wstring sFilePNG = sSkillDir + to_wstring(skill.idx) + L".png";
+			skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		}
+
+		{
+			wstring sFilePNG = sSkillDir + L"a" + to_wstring(skill.idx) + L".png";
+			skill.img_acquired = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		}
 
 		m_skills.push_back(skill);
 	}
@@ -258,12 +276,18 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 	}
 
 	for (int i = 0; i < m_skills.size(); ++i) {
-		if (m_skills[i].img.empty())
-			continue;
-		cv::Mat img_title(m_skills[i].img, cv::Rect(60, 4, 120, 17));
-		cv::Mat img_title_resize;
-		cv::resize(img_title, img_title_resize, cv::Size(240, 34));
-		m_skills[i].img_title = img_title_resize;
+		if (!m_skills[i].img.empty()) {
+			cv::Mat img_title(m_skills[i].img, cv::Rect(60, 4, 120, 17));
+			cv::Mat img_title_resize;
+			cv::resize(img_title, img_title_resize, cv::Size(240, 34));
+			m_skills[i].img_title = img_title_resize;
+		}
+		if (!m_skills[i].img_acquired.empty()) {
+			cv::Mat img_title(m_skills[i].img_acquired, cv::Rect(60, 4, 120, 17));
+			cv::Mat img_title_resize;
+			cv::resize(img_title, img_title_resize, cv::Size(240, 34));
+			m_skills[i].img_acquired_title = img_title_resize;
+		}
 	}
 
 	ifs.imbue(L);
@@ -567,7 +591,7 @@ int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img) const
 	return n;
 }
 
-int CUmaEvaluatorDlg::GetImageSkillLv(const cv::Mat& img) const
+int CUmaEvaluatorDlg::GetSkillLvFromImage(const cv::Mat& img) const
 {
 	double dMax = 0.0;
 	int iMax = 0;
@@ -584,7 +608,8 @@ int CUmaEvaluatorDlg::GetImageSkillLv(const cv::Mat& img) const
 	return iMax;
 }
 
-int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img) const
+
+int CUmaEvaluatorDlg::GetUniqLvFromImage(const cv::Mat& img) const
 {
 	double dMax = 0.0;
 	int iMax = 0;
@@ -599,7 +624,7 @@ int CUmaEvaluatorDlg::GetImageUniqLv(const cv::Mat& img) const
 	return iMax + 1;
 }
 
-int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img) const
+int CUmaEvaluatorDlg::GetSkillFromImage(const cv::Mat& img) const
 {
 	cv::Mat img_title(img, cv::Rect(60, 5, 120, 15));
 
@@ -623,6 +648,30 @@ int CUmaEvaluatorDlg::GetImageSkill(const cv::Mat& img) const
 	return iMax;
 }
 
+int CUmaEvaluatorDlg::GetSkillFromAcquiredImage(const cv::Mat& img) const
+{
+	cv::Mat img_title(img, cv::Rect(60, 5, 120, 15));
+
+	//解像度が低いと誤検出が多いので倍のサイズにする
+	cv::Mat img_title_resize;
+	cv::resize(img_title, img_title_resize, cv::Size(240, 30));
+
+	double dMax = 0.0;
+	int iMax = -1;
+	for (int i = 0; i < m_skills.size(); ++i) {
+		if (m_skills[i].img_acquired.empty())
+			continue;
+
+		double d = MatchImageRel(img_title_resize, m_skills[i].img_acquired_title);
+		if (d > max(dMax, 0.99)) {
+			dMax = d;
+			iMax = i;
+		}
+	}
+
+	return iMax;
+}
+
 vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_finish) const
 {
 	wstring sImgDir = GetImgDir();
@@ -636,7 +685,7 @@ vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_
 	cv::Mat img_plus_gold_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
 
 	map<int, bool> miPlusY; 
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < 4; ++i) {
 		cv::Mat result;
 		cv::matchTemplate(img_plus, img_plus_ref, result, cv::TM_CCORR_NORMED);
 
@@ -653,7 +702,7 @@ vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_
 		cv::rectangle(img_plus, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
 	}
 
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < 4; ++i) {
 		cv::Mat result;
 		cv::matchTemplate(img_plus, img_plus_gold_ref, result, cv::TM_CCORR_NORMED);
 
@@ -674,6 +723,39 @@ vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_
 	for (map<int, bool>::iterator it = miPlusY.begin(); it != miPlusY.end(); ++it) {
 		cv::Mat img(img_finish, cv::Rect(20, it->first + 290, 410, 95));
 		vImages.push_back(pair<cv::Mat, bool>(img, it->second));
+	}
+
+	return vImages;
+}
+
+vector<cv::Mat> CUmaEvaluatorDlg::GetSkillImagesAcquired(const cv::Mat img_finish) const
+{
+	wstring sImgDir = GetImgDir();
+
+	// 固有スキルはいれたくないので２番めから検出
+	//cv::Mat img_acquired(img_finish, cv::Rect(390, 320, 35, 280));
+	cv::Mat img_acquired(img_finish, cv::Rect(345, 420, 40, 160));
+
+	wstring sFilePNG = sImgDir + L"acquired.png";
+	cv::Mat img_acquired_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+	vector<cv::Mat> vImages;
+	for (int i = 0; i < 3; ++i) {
+		cv::Mat result;
+		cv::matchTemplate(img_acquired, img_acquired_ref, result, cv::TM_CCORR_NORMED);
+
+		double d;
+		cv::Point p;
+		cv::minMaxLoc(result, NULL, &d, NULL, &p);
+
+		if (d < 0.99)
+			break;
+
+		cv::Mat img(img_finish, cv::Rect(20, p.y + 380, 410, 95));
+		vImages.push_back(img);
+
+		cv::Point p1(40, p.y + 10);
+		cv::rectangle(img_acquired, p, p1, cv::Scalar(0, 0, 0), cv::FILLED);
 	}
 
 	return vImages;
@@ -831,7 +913,7 @@ void CUmaEvaluatorDlg::Detect()
 
 				cv::Mat img_UniqLv(img_finish, cv::Rect(210, 440, 10, 15));
 
-				int n = GetImageUniqLv(img_UniqLv);
+				int n = GetUniqLvFromImage(img_UniqLv);
 				m_comboUniqueSkillLv.SetCurSel(n - 1);
 			}
 		}
@@ -854,67 +936,130 @@ void CUmaEvaluatorDlg::Detect()
 				m_editSkillPt.SetWindowTextW(Int2CS(n));
 			}
 
-			vector<pair<cv::Mat, bool> > vImages = GetSkillImages(img_finish);
+			{ // 未取得スキル
+				vector<pair<cv::Mat, bool> > vImages = GetSkillImages(img_finish);
 
-			bool bUpdate = false;
+				bool bUpdate = false;
 
-			for (int i = 0; i < vImages.size(); ++i) {
+				for (int i = 0; i < vImages.size(); ++i) {
 
-				const cv::Mat& img_skill_frame = vImages[i].first;
-				cv::Mat img_skill(img_skill_frame, cv::Rect(5, 5, 280, 90));
+					const cv::Mat& img_skill_frame = vImages[i].first;
+					cv::Mat img_skill(img_skill_frame, cv::Rect(5, 5, 280, 90));
 
-				int iSkill = GetImageSkill(img_skill);
-				if (iSkill < 0)
-					continue;
+					int iSkill = GetSkillFromImage(img_skill);
+					if (iSkill < 0)
+						continue;
 
-				vector<int> viSkills;
+					vector<int> viSkills;
 
-				//○スキルなら◎スキルもあれば追加
-				if (m_skills[iSkill].sName.substr(m_skills[iSkill].sName.length() - 1) == L"◯") {
-					int iDoubleCircle = -1;
-					for (int j = 0; j < m_skills.size(); ++j) {
-						if (m_skills[j].iSubSkill == iSkill && m_skills[j].sName.substr(m_skills[j].sName.length() - 1) == L"◎") {
-							iDoubleCircle = j;
-							break;
+					//○スキルなら◎スキルもあれば追加
+					if (m_skills[iSkill].sName.substr(m_skills[iSkill].sName.length() - 1) == L"◯") {
+						int iDoubleCircle = -1;
+						for (int j = 0; j < m_skills.size(); ++j) {
+							if (m_skills[j].iSubSkill == iSkill && m_skills[j].sName.substr(m_skills[j].sName.length() - 1) == L"◎") {
+								iDoubleCircle = j;
+								break;
+							}
+						}
+						if (iDoubleCircle > -1) {
+							viSkills.push_back(iDoubleCircle);
 						}
 					}
-					if (iDoubleCircle > -1) {
-						viSkills.push_back(iDoubleCircle);
+					viSkills.push_back(iSkill);
+
+					//◎スキルなら○スキルを獲得済みスキルに追加
+					if (m_skills[iSkill].sName.substr(m_skills[iSkill].sName.length() - 1) == L"◎") {
+						int iSubSkill = m_skills[iSkill].iSubSkill;
+						if (iSubSkill > -1) {
+							bool bFound = false;
+							for (int j = 0; j < m_vSkillItemsAcquired.size(); ++j) {
+								if (m_vSkillItemsAcquired[j].iSkill == iSubSkill) {
+									bFound = true;
+									break;
+								}
+							}
+							if (!bFound) {
+								m_vSkillItemsAcquired.push_back(CSkillItem(iSubSkill, -1));
+								bUpdate = true;
+							}
+						}
+					}
+
+					cv::Mat img_Lv(img_skill_frame, cv::Rect(365, 2, 10, 15));
+					int iLv = GetSkillLvFromImage(img_Lv);
+
+					for (int j = 0; j < viSkills.size(); ++j) {
+						int iSkill = viSkills[j];
+						bool bFound = false;
+						for (int j = 0; j < m_vSkillItems.size(); ++j) {
+							if (m_vSkillItems[j].iSkill == iSkill) {
+								bFound = true;
+								break;
+							}
+						}
+						if (!bFound) {
+							m_vSkillItems.push_back(CSkillItem(iSkill, iLv));
+							bUpdate = true;
+						}
 					}
 				}
-				viSkills.push_back(iSkill);
 
-				cv::Mat img_Lv(img_skill_frame, cv::Rect(365, 2, 10, 15));
-				int iLv = GetImageSkillLv(img_Lv);
+				if (bUpdate) {
+					UpdateSkillList();
 
-				for (int j = 0; j < viSkills.size(); ++j) {
-					int iSkill = viSkills[j];
+					CRect rc;
+					m_listCtrlSkillCandidate.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
+					int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
+					int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
+					CSize cs;
+					cs.cx = 0;
+					cs.cy = offset;
+					if (offset) {
+						m_listCtrlSkillCandidate.Scroll(cs);
+					}
+				}
+			}
+
+			{ // 獲得済みスキル
+				vector<cv::Mat> vImages = GetSkillImagesAcquired(img_finish);
+
+				bool bUpdate = false;
+
+				for (int i = 0; i < vImages.size(); ++i) {
+
+					const cv::Mat& img_skill_frame = vImages[i];
+					cv::Mat img_skill(img_skill_frame, cv::Rect(5, 5, 280, 90));
+
+					int iSkill = GetSkillFromAcquiredImage(img_skill);
+					if (iSkill < 0)
+						continue;
+
 					bool bFound = false;
-					for (int j = 0; j < m_vSkillItems.size(); ++j) {
-						if (m_vSkillItems[j].iSkill == iSkill) {
+					for (int j = 0; j < m_vSkillItemsAcquired.size(); ++j) {
+						if (m_vSkillItemsAcquired[j].iSkill == iSkill) {
 							bFound = true;
 							break;
 						}
 					}
 					if (!bFound) {
-						m_vSkillItems.push_back(CSkillItem(iSkill, iLv));
+						m_vSkillItemsAcquired.push_back(CSkillItem(iSkill, -1));
 						bUpdate = true;
 					}
 				}
-			}
 
-			if (bUpdate) {
-				UpdateSkillList();
+				if (bUpdate) {
+					UpdateSkillList();
 
-				CRect rc;
-				m_listCtrlSkillCandidate.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
-				int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
-				int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
-				CSize cs;
-				cs.cx = 0;
-				cs.cy = offset;
-				if (offset) {
-					m_listCtrlSkillCandidate.Scroll(cs);
+					CRect rc;
+					m_listCtrlSkillAcquired.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
+					int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
+					int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
+					CSize cs;
+					cs.cx = 0;
+					cs.cy = offset;
+					if (offset) {
+						m_listCtrlSkillAcquired.Scroll(cs);
+					}
 				}
 			}
 		}
@@ -1039,6 +1184,22 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 			}
 			++iCandidate;
 		}
+	}
+
+	m_listCtrlSkillAcquired.DeleteAllItems();
+	for (int i = 0; i < m_vSkillItemsAcquired.size(); ++i) {
+		int iSkill = m_vSkillItemsAcquired[i].iSkill;
+		const CSkill& skill = m_skills[iSkill];
+
+		const wstring& wsName = skill.sName;
+
+		wstring wsTekisei = skill.GetTekiseiStr();
+		wsTekisei = wsTekisei.substr(0, 1);
+		int nEval = GetEvalOfSkill(skill);
+
+		m_listCtrlSkillAcquired.InsertItem(i, WS2CS(wsTekisei));
+		m_listCtrlSkillAcquired.SetItemText(i, 1, WS2CS(wsName));
+		m_listCtrlSkillAcquired.SetItemText(i, 2, Int2CS(nEval));
 	}
 
 	m_stSkillPtUsed.SetWindowTextW(L"使用スキルPt：" + Int2CS(nPtUsed));
@@ -1300,8 +1461,16 @@ void CUmaEvaluatorDlg::UpdateEval()
 		m_stSkillEval.SetWindowTextW(L"取得スキル評価点：");
 	}
 
-	if (nEvalStatusUniq > -1 && nEvalSkill > -1) {
-		int nEvalTotal = nEvalStatusUniq + nEvalSkill;
+	int nEvalSkillAcquired = GetSkillAcquiredEval();
+	if (nEvalSkillAcquired > -1) {
+		m_stSkillAcquiredEval.SetWindowTextW(L"獲得済みスキル評価点：" + Int2CS(nEvalSkillAcquired));
+	}
+	else {
+		m_stSkillAcquiredEval.SetWindowTextW(L"獲得済みスキル評価点：");
+	}
+
+	if (nEvalStatusUniq > -1 && nEvalSkill > -1 && nEvalSkillAcquired > -1) {
+		int nEvalTotal = nEvalStatusUniq + nEvalSkill + nEvalSkillAcquired;
 		wstring sRank = GetRankFromEval(nEvalTotal);
 		m_stTotalEval.SetWindowTextW(L"評価点合計：" + Int2CS(nEvalTotal) + " ランク：" + WS2CS(sRank));
 	}
@@ -1390,6 +1559,21 @@ int CUmaEvaluatorDlg::GetSkillEval() const
 		if (m_vSkillItems[i].bHidden)
 			continue;
 		int iSkill = m_vSkillItems[i].iSkill;
+		const CSkill& skill = m_skills[iSkill];
+		int nEval = GetEvalOfSkill(skill);
+		nPt += nEval;
+	}
+
+	return nPt;
+}
+
+int CUmaEvaluatorDlg::GetSkillAcquiredEval() const
+{
+	int nPt = 0;
+
+	// 取得スキル評価点
+	for (int i = 0; i < m_vSkillItemsAcquired.size(); ++i) {
+		int iSkill = m_vSkillItemsAcquired[i].iSkill;
 		const CSkill& skill = m_skills[iSkill];
 		int nEval = GetEvalOfSkill(skill);
 		nPt += nEval;
@@ -1841,6 +2025,138 @@ void CUmaEvaluatorDlg::OnLvnHotTrackListCtrlSkillCandidate(NMHDR* pNMHDR, LRESUL
 			m_picCtrlSkillImageHover.SetBitmap(bmp);
 			break;
 		}
+	}
+
+	*pResult = 0;
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistrationAcquired()
+{
+	const int DEFAULT_WIDTH = 450;
+	const int DEFAULT_HEIGHT = 800;
+
+	wstring sDataDir = GetDataDir();
+	wstring sImgDir = GetImgDir();
+
+	cv::Mat img = GetUmaWindowImage();
+	if (img.empty())
+		return;
+
+	cv::Mat img_finish;
+	cv::resize(img, img_finish, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
+
+	cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
+	wstring sFilePNG = sImgDir + L"skill_select.png";
+	cv::Mat img_skill_select_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+
+	// スキル取得
+	if (!MatchImage(img_skill_select, img_skill_select_ref)) {
+		MessageBox(L"スキル取得画面を表示してください。");
+		return;
+	}
+
+	vector<cv::Mat> vImages = GetSkillImagesAcquired(img_finish);
+
+	for (int i = 0; i < vImages.size(); ++i) {
+
+		const cv::Mat& img_skill_frame = vImages[i];
+
+		cv::Mat img_skill(img_skill_frame, cv::Rect(5, 5, 280, 90));
+
+		CRegisterSkillDlg dlg;
+
+		int idx = dlg.Setup(img_skill, m_skills);
+		if (idx < 0)
+			continue;
+
+		wstring sSkillDir = sDataDir + L"skills\\";
+		wstring sFilePNG = sSkillDir + L"a" + to_wstring(idx) + L".png";
+		cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
+	}
+
+	ReadSkillTSV();
+}
+
+
+void CUmaEvaluatorDlg::OnNMCustomdrawListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLVCUSTOMDRAW lpLvCustomDraw = reinterpret_cast<LPNMLVCUSTOMDRAW>(pNMHDR);
+
+	if (lpLvCustomDraw->nmcd.dwDrawStage == CDDS_PREPAINT)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+		return;
+	}
+
+	if (lpLvCustomDraw->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
+	{
+		SKILL_TYPE type = SKILL_TYPE_UNKNOWN;
+		int j = 0;
+		for (int i = 0; i < m_vSkillItemsAcquired.size(); ++i) {
+			if (lpLvCustomDraw->nmcd.dwItemSpec == j) {
+				int iSkill = m_vSkillItemsAcquired[i].iSkill;
+				type = m_skills[iSkill].type;
+				break;
+			}
+			++j;
+		}
+
+		switch (type) {
+		case SKILL_TYPE_ORANGE: lpLvCustomDraw->clrTextBk = RGB(252, 195, 38); break;
+		case SKILL_TYPE_BLUE: lpLvCustomDraw->clrTextBk = RGB(32, 220, 253); break;
+		case SKILL_TYPE_RED: lpLvCustomDraw->clrTextBk = RGB(254, 170, 169); break;
+		case SKILL_TYPE_GREEN: lpLvCustomDraw->clrTextBk = RGB(188, 232, 54); break;
+		default: lpLvCustomDraw->clrTextBk = GetSysColor(COLOR_WINDOW);
+		}
+
+		*pResult = CDRF_NEWFONT;
+		return;
+	}
+
+	*pResult = 0;
+}
+
+
+void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
+
+	if (pLVKeyDow->wVKey == VK_DELETE)
+	{
+		vector<CSkillItem> skillsNew;
+		for (int i = 0; i < m_vSkillItemsAcquired.size(); ++i) {
+			if (m_vSkillItems[i].bObtain || !m_vSkillItems[i].bSelected || m_vSkillItems[i].bHidden) {
+				skillsNew.push_back(m_vSkillItemsAcquired[i]);
+			}
+		}
+		m_vSkillItemsAcquired = skillsNew;
+
+		UpdateSkillList();
+		UpdateEval();
+	}
+
+	*pResult = 0;
+}
+
+
+void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	if (m_bOnUpdateSkillList)
+		return;
+
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+	set<int> siSelected;
+	POSITION pos = m_listCtrlSkillAcquired.GetFirstSelectedItemPosition();
+	while (pos)
+	{
+		int nItem = m_listCtrlSkillAcquired.GetNextSelectedItem(pos);
+		siSelected.insert(nItem);
+	}
+
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		m_vSkillItems[i].bSelected = (siSelected.find(i) != siSelected.end());
 	}
 
 	*pResult = 0;

@@ -12,6 +12,7 @@
 #define IDC_BUTTON_DETECT               1000
 #define IDC_BUTTON_SKILL_REGISTRATION   1001
 #define IDC_BUTTON_MAXIMIZE_EVAL        1002
+#define IDC_BUTTON_SKILL_REGISTRATION_ACQUIRED 1003
 #define IDC_COMBO_TURF                  1006
 #define IDC_EDIT_SPEED                  1007
 #define IDC_COMBO_SHORT                 1008
@@ -51,7 +52,6 @@
 #define IDC_STATIC_SKILL_PT_REMAIN      1034
 #define IDC_CHECK_KIREMONO              1035
 #define IDC_EDIT_NARROW                 1036
-#define IDC_STATIC_SKILL_IMAGE2         1036
 #define IDC_STATIC_SKILL_IMAGE_HOVER    1036
 #define IDC_CHECK_TURF                  1037
 #define IDC_CHECK_DART                  1038
@@ -64,6 +64,9 @@
 #define IDC_CHECK_OIKOMI                1045
 #define IDC_CHECK_LONG                  1046
 #define IDC_BUTTON_UNCHECK_UNDER_B      1047
+#define IDC_LIST_CTRL_SKILL_ACQUIRED    1048
+#define IDC_STATIC_SKILL_EVAL2          1049
+#define IDC_STATIC_SKILL_EVAL_AQUIRED   1049
 
 // Next default values for new objects
 // 

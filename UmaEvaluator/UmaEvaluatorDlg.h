@@ -59,10 +59,12 @@ private:
 	void ReadSkillLv();
 	void ReadUniqLv();
 	void ReadStatusPointTSV();
-	int GetImageSkillLv(const cv::Mat& img) const;
-	int GetImageUniqLv(const cv::Mat& img) const;
-	int GetImageSkill(const cv::Mat& img) const;
+	int GetSkillLvFromImage(const cv::Mat& img) const;
+	int GetUniqLvFromImage(const cv::Mat& img) const;
+	int GetSkillFromImage(const cv::Mat& img) const;
+	int GetSkillFromAcquiredImage(const cv::Mat& img) const;
 	vector<pair<cv::Mat, bool> > GetSkillImages(const cv::Mat img_finish) const;
+	vector<cv::Mat> GetSkillImagesAcquired(const cv::Mat img_finish) const;
 	CString WS2CS(const wstring& ws) const;
 	CString Int2CS(int n) const;
 	void UpdateSkillList();
@@ -70,6 +72,7 @@ private:
 	int GetSkillObtainPt(const CSkillItem& skillItem) const;
 	int GetStatusUniqEval() const;
 	int GetSkillEval() const;
+	int GetSkillAcquiredEval() const;
 	wstring GetRankFromEval(int nEval) const;
 	int GetEvalOfSkill(const CSkill& skill) const;
 	void Detect();
@@ -84,6 +87,7 @@ private:
 	UINT_PTR m_timerID;
 
 	vector<CSkillItem> m_vSkillItems;
+	vector<CSkillItem> m_vSkillItemsAcquired;
 	bool m_bOnUpdateSkillList;
 
 // 実装
@@ -167,4 +171,10 @@ public:
 	afx_msg void OnBnClickedButtonMaximizeEval();
 	afx_msg void OnLvnHotTrackListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT* pResult);
 	CStatic m_picCtrlSkillImageHover;
+	CListCtrl m_listCtrlSkillAcquired;
+	afx_msg void OnBnClickedButtonSkillRegistrationAcquired();
+	afx_msg void OnNMCustomdrawListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnKeydownListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnLvnItemchangedListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT* pResult);
+	CStatic m_stSkillAcquiredEval;
 };

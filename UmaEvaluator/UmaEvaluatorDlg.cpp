@@ -16,6 +16,8 @@
 
 using namespace std;
 
+const int MAX_STATUS_POINT = 2000;
+
 // アプリケーションのバージョン情報に使われる CAboutDlg ダイアログ
 
 class CAboutDlg : public CDialogEx
@@ -330,7 +332,7 @@ void CUmaEvaluatorDlg::ReadUniqLv()
 
 void CUmaEvaluatorDlg::ReadStatusPointTSV()
 {
-	m_vnStatusPoint.resize(1201);
+	m_vnStatusPoint.resize(MAX_STATUS_POINT + 1);
 
 	wstring sDataDir = GetDataDir();
 	wstring sFileTSV = sDataDir + L"status_point.txt";
@@ -351,7 +353,7 @@ void CUmaEvaluatorDlg::ReadStatusPointTSV()
 		getline(iss, s, L'\t');
 		int nPt = stoi(s);
 
-		if (0 <= i && i <= 1200) {
+		if (0 <= i && i <= MAX_STATUS_POINT) {
 			m_vnStatusPoint[i] = nPt;
 		}
 	}
@@ -1518,7 +1520,7 @@ int CUmaEvaluatorDlg::GetStatusUniqEval() const
 		edits[i]->GetWindowTextW(cs);
 		int n = _ttoi(cs);
 
-		if (0 < n && n <= 1200) {
+		if (0 <= n && n <= MAX_STATUS_POINT) {
 			nPt += m_vnStatusPoint[n];
 		}
 		else {

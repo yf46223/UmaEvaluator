@@ -145,6 +145,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnNMCustomdrawListCtrlSkillAcquired)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillAcquired)
+	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain)
 END_MESSAGE_MAP()
 
 
@@ -2180,19 +2181,26 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT*
 {
 	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
 
-	if (pLVKeyDow->wVKey == VK_DELETE)
-	{
-		vector<CSkillItem> skillsNew;
-		for (int i = 0; i < m_vSkillItemsAcquired.size(); ++i) {
-			if (!m_vSkillItemsAcquired[i].bSelected) {
-				skillsNew.push_back(m_vSkillItemsAcquired[i]);
-			}
-		}
-		m_vSkillItemsAcquired = skillsNew;
-
-		UpdateSkillList();
-		UpdateEval();
+	if (pLVKeyDow->wVKey != VK_DELETE) {
+		*pResult = 0;
+		return;
 	}
+
+	for (int i = m_vSkillItemsAcquired.size() - 1; i > -1; --i) {
+		if (m_vSkillItemsAcquired[i].bSelected) {
+			m_listCtrlSkillAcquired.DeleteItem(i);
+		}
+	}
+
+	vector<CSkillItem> skillsNew;
+	for (int i = 0; i < m_vSkillItemsAcquired.size(); ++i) {
+		if (!m_vSkillItemsAcquired[i].bSelected) {
+			skillsNew.push_back(m_vSkillItemsAcquired[i]);
+		}
+	}
+	m_vSkillItemsAcquired = skillsNew;
+
+	UpdateEval();
 
 	*pResult = 0;
 }
@@ -2213,9 +2221,46 @@ void CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillAcquired(NMHDR* pNMHDR, LRES
 		siSelected.insert(nItem);
 	}
 
-	for (int i = 0; i < m_vSkillItems.size(); ++i) {
-		m_vSkillItems[i].bSelected = (siSelected.find(i) != siSelected.end());
+	for (int i = 0; i < m_vSkillItemsAcquired.size(); ++i) {
+		m_vSkillItemsAcquired[i].bSelected = (siSelected.find(i) != siSelected.end());
 	}
+
+	*pResult = 0;
+}
+
+
+void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
+
+	if (pLVKeyDow->wVKey != VK_DELETE) {
+		*pResult = 0;
+		return;
+	}
+
+	vector<int> viObtain;
+	int iObtain = 0;
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (m_vSkillItems[i].bObtain && !m_vSkillItems[i].bHidden) {
+			if (m_vSkillItems[i].bSelected)
+				viObtain.push_back(iObtain);
+			++iObtain;
+		}
+	}
+	for (int i = viObtain.size() - 1; i > -1; --i) {
+		int iObtain = viObtain[i];
+		m_listCtrlSkillObtain.DeleteItem(iObtain);
+	}
+
+	vector<CSkillItem> skillsNew;
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (!m_vSkillItems[i].bObtain || !m_vSkillItems[i].bSelected || m_vSkillItems[i].bHidden) {
+			skillsNew.push_back(m_vSkillItems[i]);
+		}
+	}
+	m_vSkillItems = skillsNew;
+
+	UpdateEval();
 
 	*pResult = 0;
 }

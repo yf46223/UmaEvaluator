@@ -78,6 +78,8 @@ private:
 	void Detect();
 	void HideSkillItems();
 	int SelectMaxEval(int nPt, const vector<int>& vnPt, const vector<int>& vnEval, const vector<int>& viDepend, vector<int>& viSelect);
+	void AddSkillItemCandidate(const CSkillItem& skillItem);
+	void AddSkillItemAcquired(const CSkillItem& skillItem);
 
 private:
 	vector<CSkill> m_skills;

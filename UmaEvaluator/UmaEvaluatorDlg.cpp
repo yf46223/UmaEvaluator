@@ -945,8 +945,6 @@ void CUmaEvaluatorDlg::Detect()
 			{ // 未取得スキル
 				vector<pair<cv::Mat, bool> > vImages = GetSkillImages(img_finish);
 
-				bool bUpdate = false;
-
 				for (int i = 0; i < vImages.size(); ++i) {
 
 					const cv::Mat& img_skill_frame = vImages[i].first;
@@ -986,7 +984,6 @@ void CUmaEvaluatorDlg::Detect()
 							}
 							if (!bFound) {
 								m_vSkillItemsAcquired.push_back(CSkillItem(iSubSkill, -1));
-								bUpdate = true;
 							}
 						}
 					}
@@ -1004,32 +1001,14 @@ void CUmaEvaluatorDlg::Detect()
 							}
 						}
 						if (!bFound) {
-							m_vSkillItems.push_back(CSkillItem(iSkill, iLv));
-							bUpdate = true;
+							AddSkillItemCandidate(CSkillItem(iSkill, iLv));
 						}
-					}
-				}
-
-				if (bUpdate) {
-					UpdateSkillList();
-
-					CRect rc;
-					m_listCtrlSkillCandidate.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
-					int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
-					int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
-					CSize cs;
-					cs.cx = 0;
-					cs.cy = offset;
-					if (offset) {
-						m_listCtrlSkillCandidate.Scroll(cs);
 					}
 				}
 			}
 
 			{ // 獲得済みスキル
 				vector<cv::Mat> vImages = GetSkillImagesAcquired(img_finish);
-
-				bool bUpdate = false;
 
 				for (int i = 0; i < vImages.size(); ++i) {
 
@@ -1048,28 +1027,88 @@ void CUmaEvaluatorDlg::Detect()
 						}
 					}
 					if (!bFound) {
-						m_vSkillItemsAcquired.push_back(CSkillItem(iSkill, -1));
-						bUpdate = true;
-					}
-				}
-
-				if (bUpdate) {
-					UpdateSkillList();
-
-					CRect rc;
-					m_listCtrlSkillAcquired.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
-					int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
-					int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
-					CSize cs;
-					cs.cx = 0;
-					cs.cy = offset;
-					if (offset) {
-						m_listCtrlSkillAcquired.Scroll(cs);
+						AddSkillItemAcquired(CSkillItem(iSkill, -1));
 					}
 				}
 			}
 		}
 	}
+}
+
+void CUmaEvaluatorDlg::AddSkillItemCandidate(const CSkillItem& skillItem)
+{
+	m_bOnUpdateSkillList = true;
+
+	m_vSkillItems.push_back(skillItem);
+
+	int iSkill = skillItem.iSkill;
+	int iLv = skillItem.iLv;
+	const CSkill& skill = m_skills[iSkill];
+
+	const wstring& wsName = skill.sName;
+
+	int nPt = GetSkillObtainPt(skillItem);
+
+	wstring wsTekisei = skill.GetTekiseiStr();
+	wsTekisei = wsTekisei.substr(0, 1);
+	int nEval = GetEvalOfSkill(skill);
+
+	int n = m_listCtrlSkillCandidate.GetItemCount();
+	m_listCtrlSkillCandidate.InsertItem(n, WS2CS(wsTekisei));
+	m_listCtrlSkillCandidate.SetItemText(n, 1, WS2CS(wsName));
+	m_listCtrlSkillCandidate.SetItemText(n, 2, Int2CS(iLv));
+	m_listCtrlSkillCandidate.SetItemText(n, 3, Int2CS(nPt));
+	m_listCtrlSkillCandidate.SetItemText(n, 4, Int2CS(nEval));
+
+	CRect rc;
+	m_listCtrlSkillCandidate.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
+	int index = m_listCtrlSkillCandidate.GetTopIndex();//現在行
+	int offset = rc.Height() * (m_listCtrlSkillCandidate.GetItemCount() - 1 - index);//10行へオフセット計算
+	CSize cs;
+	cs.cx = 0;
+	cs.cy = offset;
+	if (offset) {
+		m_listCtrlSkillCandidate.Scroll(cs);
+	}
+
+	m_bOnUpdateSkillList = false;
+}
+
+void CUmaEvaluatorDlg::AddSkillItemAcquired(const CSkillItem& skillItem)
+{
+	m_bOnUpdateSkillList = true;
+
+	m_vSkillItemsAcquired.push_back(skillItem);
+
+	int iSkill = skillItem.iSkill;
+	int iLv = skillItem.iLv;
+	const CSkill& skill = m_skills[iSkill];
+
+	const wstring& wsName = skill.sName;
+
+	wstring wsTekisei = skill.GetTekiseiStr();
+	wsTekisei = wsTekisei.substr(0, 1);
+	int nEval = GetEvalOfSkill(skill);
+
+	int n = m_listCtrlSkillAcquired.GetItemCount();
+	m_listCtrlSkillAcquired.InsertItem(n, WS2CS(wsTekisei));
+	m_listCtrlSkillAcquired.SetItemText(n, 1, WS2CS(wsName));
+	m_listCtrlSkillAcquired.SetItemText(n, 2, Int2CS(nEval));
+
+	CRect rc;
+	m_listCtrlSkillAcquired.GetItemRect(0, &rc, LVIR_BOUNDS);//行高さ
+	int index = m_listCtrlSkillAcquired.GetTopIndex();//現在行
+	int offset = rc.Height() * (m_listCtrlSkillAcquired.GetItemCount() - 1 - index);//10行へオフセット計算
+	CSize cs;
+	cs.cx = 0;
+	cs.cy = offset;
+	if (offset) {
+		m_listCtrlSkillAcquired.Scroll(cs);
+	}
+
+	UpdateEval();
+		
+	m_bOnUpdateSkillList = false;
 }
 
 int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem) const

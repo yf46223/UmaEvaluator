@@ -146,7 +146,6 @@ public:
 	afx_msg void OnBnClickedCheckKiremono();
 	CButton m_buttonDetect;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	CButton m_checkTurf;
 	CButton m_checkDart;
 	CButton m_checkShort;
 	CButton m_checkMile;
@@ -156,7 +155,6 @@ public:
 	CButton m_checkSenkou;
 	CButton m_checkSashi;
 	CButton m_checkOikomi;
-	afx_msg void OnBnClickedCheckTurf();
 	afx_msg void OnBnClickedCheckDart();
 	afx_msg void OnBnClickedCheckShort();
 	afx_msg void OnBnClickedCheckMile();

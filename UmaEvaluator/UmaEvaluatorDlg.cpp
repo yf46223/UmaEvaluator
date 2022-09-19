@@ -91,7 +91,6 @@ void CUmaEvaluatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_SKILL_PT_REMAIN, m_stSkillPtRemain);
 	DDX_Control(pDX, IDC_CHECK_KIREMONO, m_checkKiremono);
 	DDX_Control(pDX, IDC_BUTTON_DETECT, m_buttonDetect);
-	DDX_Control(pDX, IDC_CHECK_TURF, m_checkTurf);
 	DDX_Control(pDX, IDC_CHECK_DART, m_checkDart);
 	DDX_Control(pDX, IDC_CHECK_SHORT, m_checkShort);
 	DDX_Control(pDX, IDC_CHECK_MILE, m_checkMile);
@@ -126,7 +125,6 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBO_UNIQUE_SKILL_LEVEL, &CUmaEvaluatorDlg::OnCbnSelchangeComboUniqueSkillLevel)
 	ON_BN_CLICKED(IDC_CHECK_KIREMONO, &CUmaEvaluatorDlg::OnBnClickedCheckKiremono)
 	ON_WM_TIMER()
-	ON_BN_CLICKED(IDC_CHECK_TURF, &CUmaEvaluatorDlg::OnBnClickedCheckTurf)
 	ON_BN_CLICKED(IDC_CHECK_DART, &CUmaEvaluatorDlg::OnBnClickedCheckDart)
 	ON_BN_CLICKED(IDC_CHECK_SHORT, &CUmaEvaluatorDlg::OnBnClickedCheckShort)
 	ON_BN_CLICKED(IDC_CHECK_MILE, &CUmaEvaluatorDlg::OnBnClickedCheckMile)
@@ -201,7 +199,6 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 	m_listCtrlSkillAcquired.InsertColumn(2, L"評価点", LVCFMT_LEFT, 50);
 	m_listCtrlSkillAcquired.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-	m_checkTurf.SetCheck(BST_CHECKED);
 	m_checkDart.SetCheck(BST_CHECKED);
 	m_checkShort.SetCheck(BST_CHECKED);
 	m_checkMile.SetCheck(BST_CHECKED);
@@ -1674,7 +1671,7 @@ void CUmaEvaluatorDlg::HideSkillItems()
 {
 	bool bHideTekisei[SKILL_TEKISEI_SIZE] = {
 		false,
-		m_checkTurf.GetCheck() == BST_UNCHECKED,
+		false,
 		m_checkDart.GetCheck() == BST_UNCHECKED,
 		m_checkShort.GetCheck() == BST_UNCHECKED,
 		m_checkMile.GetCheck() == BST_UNCHECKED,
@@ -1691,14 +1688,6 @@ void CUmaEvaluatorDlg::HideSkillItems()
 		const CSkill skill = m_skills[iSkill];
 		m_vSkillItems[i].bHidden = bHideTekisei[skill.tekisei];
 	}
-}
-
-
-void CUmaEvaluatorDlg::OnBnClickedCheckTurf()
-{
-	HideSkillItems();
-	UpdateSkillList();
-	UpdateEval();
 }
 
 
@@ -1782,7 +1771,6 @@ void CUmaEvaluatorDlg::OnBnClickedButton2()
 
 void CUmaEvaluatorDlg::OnBnClickedButtonUncheckUnderB()
 {
-	if (m_comboTurf  .GetCurSel() > 1) m_checkTurf  .SetCheck(BST_UNCHECKED);
 	if (m_comboDart  .GetCurSel() > 1) m_checkDart  .SetCheck(BST_UNCHECKED);
 	if (m_comboShort .GetCurSel() > 1) m_checkShort .SetCheck(BST_UNCHECKED);
 	if (m_comboMile  .GetCurSel() > 1) m_checkMile  .SetCheck(BST_UNCHECKED);

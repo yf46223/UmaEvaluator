@@ -49,6 +49,7 @@ BOOL CRegisterSkillDlg::OnInitDialog()
 BEGIN_MESSAGE_MAP(CRegisterSkillDlg, CDialogEx)
     ON_BN_CLICKED(IDOK, &CRegisterSkillDlg::OnBnClickedOk)
     ON_EN_CHANGE(IDC_EDIT_NARROW, &CRegisterSkillDlg::OnEnChangeEditNarrow)
+    ON_NOTIFY(NM_DBLCLK, IDC_LIST_SKILLS, &CRegisterSkillDlg::OnNMDblclkListSkills)
 END_MESSAGE_MAP()
 
 int CRegisterSkillDlg::Setup(const cv::Mat& img, const vector<CSkill>& skills)
@@ -130,4 +131,31 @@ void CRegisterSkillDlg::UpdateList()
 void CRegisterSkillDlg::OnEnChangeEditNarrow()
 {
     UpdateList();
+}
+
+
+void CRegisterSkillDlg::OnNMDblclkListSkills(NMHDR* pNMHDR, LRESULT* pResult)
+{
+    LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+    // TODO: ここにコントロール通知ハンドラー コードを追加します。
+
+    int nItem = pNMItemActivate->iItem;
+
+    if (nItem < 0) {
+        *pResult = 0;
+        return;
+    }
+
+    CString cs = m_listCtrlSkills.GetItemText(nItem, 0);
+    wstring ws(cs);
+    for (int i = 0; i < m_skills.size(); ++i) {
+        if (ws == m_skills[i].sName) {
+            m_idx = m_skills[i].idx;
+            break;
+        }
+    }
+
+    *pResult = 0;
+
+    EndDialog(IDOK);
 }

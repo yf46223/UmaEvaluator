@@ -40,4 +40,5 @@ public:
 	CStatic m_picCtrlSkillImage;
 	CEdit m_editNarrow;
 	afx_msg void OnEnChangeEditNarrow();
+	afx_msg void OnNMDblclkListSkills(NMHDR* pNMHDR, LRESULT* pResult);
 };

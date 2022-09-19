@@ -1345,19 +1345,32 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 {
 	LPNMLVKEYDOWN pLVKeyDow = reinterpret_cast<LPNMLVKEYDOWN>(pNMHDR);
 
-	if (pLVKeyDow->wVKey == VK_DELETE)
-	{
-		vector<CSkillItem> skillsNew;
-		for (int i = 0; i < m_vSkillItems.size(); ++i) {
-			if (m_vSkillItems[i].bObtain || !m_vSkillItems[i].bSelected || m_vSkillItems[i].bHidden) {
-				skillsNew.push_back(m_vSkillItems[i]);
-			}
-		}
-		m_vSkillItems = skillsNew;
-
-		UpdateSkillList();
-		UpdateEval();
+	if (pLVKeyDow->wVKey != VK_DELETE) {
+		*pResult = 0;
+		return;
 	}
+
+	vector<int> viCandidate;
+	int iCandidate = 0;
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (!m_vSkillItems[i].bObtain && !m_vSkillItems[i].bHidden) {
+			if (m_vSkillItems[i].bSelected)
+				viCandidate.push_back(iCandidate);
+			++iCandidate;
+		}
+	}
+	for (int i = viCandidate.size() - 1; i > -1; --i) {
+		int iCandidate = viCandidate[i];
+		m_listCtrlSkillCandidate.DeleteItem(iCandidate);
+	}
+
+	vector<CSkillItem> skillsNew;
+	for (int i = 0; i < m_vSkillItems.size(); ++i) {
+		if (m_vSkillItems[i].bObtain || !m_vSkillItems[i].bSelected || m_vSkillItems[i].bHidden) {
+			skillsNew.push_back(m_vSkillItems[i]);
+		}
+	}
+	m_vSkillItems = skillsNew;
 
 	*pResult = 0;
 }

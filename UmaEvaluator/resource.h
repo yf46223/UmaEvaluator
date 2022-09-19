@@ -65,8 +65,8 @@
 #define IDC_CHECK_LONG                  1046
 #define IDC_BUTTON_UNCHECK_UNDER_B      1047
 #define IDC_LIST_CTRL_SKILL_ACQUIRED    1048
-#define IDC_STATIC_SKILL_EVAL2          1049
 #define IDC_STATIC_SKILL_EVAL_AQUIRED   1049
+#define IDC_BUTTON_CLEAR_SKILLS         1050
 
 // Next default values for new objects
 // 
@@ -74,7 +74,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1048
+#define _APS_NEXT_CONTROL_VALUE         1051
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

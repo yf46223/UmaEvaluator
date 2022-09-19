@@ -146,6 +146,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillAcquired)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain)
+	ON_BN_CLICKED(IDC_BUTTON_CLEAR_SKILLS, &CUmaEvaluatorDlg::OnBnClickedButtonClearSkills)
 END_MESSAGE_MAP()
 
 
@@ -2263,4 +2264,18 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* p
 	UpdateEval();
 
 	*pResult = 0;
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedButtonClearSkills()
+{
+	m_listCtrlSkillCandidate.DeleteAllItems();
+	m_listCtrlSkillObtain.DeleteAllItems();
+	m_listCtrlSkillAcquired.DeleteAllItems();
+
+	m_vSkillItems.clear();
+	m_vSkillItemsAcquired.clear();
+
+	UpdateSkillList();
+	UpdateEval();
 }

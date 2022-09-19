@@ -180,4 +180,5 @@ public:
 	afx_msg void OnLvnItemchangedListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT* pResult);
 	CStatic m_stSkillAcquiredEval;
 	afx_msg void OnLvnKeydownListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedButtonClearSkills();
 };

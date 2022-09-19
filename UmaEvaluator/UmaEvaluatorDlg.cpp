@@ -1349,6 +1349,8 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 		return;
 	}
 
+	m_bOnUpdateSkillList = true;
+
 	vector<int> viCandidate;
 	int iCandidate = 0;
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
@@ -1370,6 +1372,8 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 		}
 	}
 	m_vSkillItems = skillsNew;
+
+	m_bOnUpdateSkillList = false;
 
 	*pResult = 0;
 }
@@ -2175,6 +2179,8 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT*
 		return;
 	}
 
+	m_bOnUpdateSkillList = true;
+
 	for (int i = m_vSkillItemsAcquired.size() - 1; i > -1; --i) {
 		if (m_vSkillItemsAcquired[i].bSelected) {
 			m_listCtrlSkillAcquired.DeleteItem(i);
@@ -2190,6 +2196,8 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT*
 	m_vSkillItemsAcquired = skillsNew;
 
 	UpdateEval();
+
+	m_bOnUpdateSkillList = false;
 
 	*pResult = 0;
 }
@@ -2227,6 +2235,8 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* p
 		return;
 	}
 
+	m_bOnUpdateSkillList = true;
+
 	vector<int> viObtain;
 	int iObtain = 0;
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
@@ -2250,6 +2260,8 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* p
 	m_vSkillItems = skillsNew;
 
 	UpdateEval();
+
+	m_bOnUpdateSkillList = false;
 
 	*pResult = 0;
 }

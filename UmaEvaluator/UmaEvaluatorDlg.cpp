@@ -1137,36 +1137,37 @@ int CUmaEvaluatorDlg::GetSkillObtainPt(const CSkillItem& skillItem) const
 int CUmaEvaluatorDlg::GetEvalOfSkill(const CSkill& skill) const
 {
 	int nEval = skill.nEval;
-	if (skill.tekisei == SKILL_TEKISEI_NONE)
+	if (skill.tekisei.empty())
 		return nEval;
 
 	const CComboBox* combos[SKILL_TEKISEI_SIZE] = {
-		NULL, &m_comboTurf,& m_comboDart,
+		&m_comboTurf,& m_comboDart,
 		&m_comboShort, &m_comboMile, &m_comboMiddle, &m_comboLong,
 		&m_comboNige, &m_comboSenkou, &m_comboSashi, &m_comboOikomi
 	};
-	int iSel = -1;
-	for (int j = SKILL_TEKISEI_SHORT; j < SKILL_TEKISEI_SIZE; ++j) {
-		if (skill.tekisei == j) iSel = combos[j]->GetCurSel();
-	}
+
 	double d = 1.0;
-	switch (iSel) {
-	case 0:
-	case 1:
-		d =  1.1;
-		break;
-	case 2:
-	case 3:
-		d = 0.9;
-		break;
-	case 4:
-	case 5:
-	case 6:
-		d = 0.8;
-		break;
-	case 7:
-		d = 0.7;
-		break;
+	set<SKILL_TEKISEI>::iterator it = skill.tekisei.begin();
+	for (; it != skill.tekisei.end(); ++it) {
+		int iSel = combos[*it]->GetCurSel();
+		switch (iSel) {
+		case 0:
+		case 1:
+			d *= 1.1;
+			break;
+		case 2:
+		case 3:
+			d *= 0.9;
+			break;
+		case 4:
+		case 5:
+		case 6:
+			d *= 0.8;
+			break;
+		case 7:
+			d *= 0.7;
+			break;
+		}
 	}
 
 	// 上位スキルの場合は、下位スキルと合算して適性係数をかけた後に下位スキルの分を引く
@@ -1360,7 +1361,7 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 			++iCandidate;
 		}
 	}
-	for (int i = viCandidate.size() - 1; i > -1; --i) {
+	for (int i = (int)viCandidate.size() - 1; i > -1; --i) {
 		int iCandidate = viCandidate[i];
 		m_listCtrlSkillCandidate.DeleteItem(iCandidate);
 	}
@@ -1675,7 +1676,6 @@ void CUmaEvaluatorDlg::HideSkillItems()
 {
 	bool bHideTekisei[SKILL_TEKISEI_SIZE] = {
 		false,
-		false,
 		m_checkDart.GetCheck() == BST_UNCHECKED,
 		m_checkShort.GetCheck() == BST_UNCHECKED,
 		m_checkMile.GetCheck() == BST_UNCHECKED,
@@ -1690,7 +1690,13 @@ void CUmaEvaluatorDlg::HideSkillItems()
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		int iSkill = m_vSkillItems[i].iSkill;
 		const CSkill skill = m_skills[iSkill];
-		m_vSkillItems[i].bHidden = bHideTekisei[skill.tekisei];
+		bool bHidden = false;
+		set<SKILL_TEKISEI>::iterator it = skill.tekisei.begin();
+		for (; it != skill.tekisei.end(); ++it) {
+			if (bHideTekisei[*it])
+				bHidden = true;
+		}
+		m_vSkillItems[i].bHidden = bHidden;
 	}
 }
 
@@ -2181,7 +2187,7 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillAcquired(NMHDR* pNMHDR, LRESULT*
 
 	m_bOnUpdateSkillList = true;
 
-	for (int i = m_vSkillItemsAcquired.size() - 1; i > -1; --i) {
+	for (int i = (int)m_vSkillItemsAcquired.size() - 1; i > -1; --i) {
 		if (m_vSkillItemsAcquired[i].bSelected) {
 			m_listCtrlSkillAcquired.DeleteItem(i);
 		}
@@ -2246,7 +2252,7 @@ void CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* p
 			++iObtain;
 		}
 	}
-	for (int i = viObtain.size() - 1; i > -1; --i) {
+	for (int i = (int)viObtain.size() - 1; i > -1; --i) {
 		int iObtain = viObtain[i];
 		m_listCtrlSkillObtain.DeleteItem(iObtain);
 	}

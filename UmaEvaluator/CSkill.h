@@ -22,7 +22,6 @@ const wstring SKILL_TYPE_STR[] = {
 };
 
 enum SKILL_TEKISEI {
-	SKILL_TEKISEI_NONE,
 	SKILL_TEKISEI_TURF,
 	SKILL_TEKISEI_DART,
 	SKILL_TEKISEI_SHORT,
@@ -36,8 +35,7 @@ enum SKILL_TEKISEI {
 	SKILL_TEKISEI_SIZE,
 };
 
-const wstring SKILL_TEKISEI_STR[] = {
-	L"",
+const wstring SKILL_TEKISEI_STR[SKILL_TEKISEI_SIZE] = {
 	L"é≈",
 	L"É_Å[Ég",
 	L"íZãóó£",
@@ -58,7 +56,7 @@ public:
 	int nPt;
 	int nEval;
 	SKILL_TYPE type;
-	SKILL_TEKISEI tekisei;
+	set<SKILL_TEKISEI> tekisei;
 	cv::Mat img;
 	cv::Mat img_title;
 	cv::Mat img_acquired;
@@ -66,7 +64,7 @@ public:
 	int iSubSkill;
 
 public:
-	CSkill() : idx(0), nPt(0), nEval(0), type(SKILL_TYPE_UNKNOWN), iSubSkill(-1), tekisei(SKILL_TEKISEI_NONE) {}
+	CSkill() : idx(0), nPt(0), nEval(0), type(SKILL_TYPE_UNKNOWN), iSubSkill(-1) {}
 
 	void SetTypeFromStr(const wstring& s) {
 		for (int i = 0; i < SKILL_TYPE_SIZE; ++i)
@@ -77,15 +75,20 @@ public:
 	}
 
 	void SetTekiseiFromStr(const wstring& s) {
+		tekisei.clear();
 		for (int i = 0; i < SKILL_TEKISEI_SIZE; ++i)
-			if (s == SKILL_TEKISEI_STR[i]) {
-				tekisei = SKILL_TEKISEI(i);
-				return;
+			if (s.find(SKILL_TEKISEI_STR[i]) != wstring::npos) {
+				tekisei.insert(SKILL_TEKISEI(i));
 			}
 	}
 
 	wstring GetTekiseiStr() const {
-		return SKILL_TEKISEI_STR[tekisei];
+		wstring ws;
+		set<SKILL_TEKISEI>::iterator it = tekisei.begin();
+		for (; it != tekisei.end(); ++it) {
+			ws += SKILL_TEKISEI_STR[*it];
+		}
+		return ws;
 	}
 };
 

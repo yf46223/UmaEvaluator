@@ -86,7 +86,7 @@ public:
 		wstring ws;
 		set<SKILL_TEKISEI>::iterator it = tekisei.begin();
 		for (; it != tekisei.end(); ++it) {
-			ws += SKILL_TEKISEI_STR[*it];
+			ws += SKILL_TEKISEI_STR[*it].substr(0, 1);
 		}
 		return ws;
 	}

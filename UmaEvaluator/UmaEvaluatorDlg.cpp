@@ -1049,7 +1049,6 @@ void CUmaEvaluatorDlg::AddSkillItemCandidate(const CSkillItem& skillItem)
 	int nPt = GetSkillObtainPt(skillItem);
 
 	wstring wsTekisei = skill.GetTekiseiStr();
-	wsTekisei = wsTekisei.substr(0, 1);
 	int nEval = GetEvalOfSkill(skill);
 
 	int n = m_listCtrlSkillCandidate.GetItemCount();
@@ -1086,7 +1085,6 @@ void CUmaEvaluatorDlg::AddSkillItemAcquired(const CSkillItem& skillItem)
 	const wstring& wsName = skill.sName;
 
 	wstring wsTekisei = skill.GetTekiseiStr();
-	wsTekisei = wsTekisei.substr(0, 1);
 	int nEval = GetEvalOfSkill(skill);
 
 	int n = m_listCtrlSkillAcquired.GetItemCount();
@@ -1149,6 +1147,8 @@ int CUmaEvaluatorDlg::GetEvalOfSkill(const CSkill& skill) const
 	double d = 1.0;
 	set<SKILL_TEKISEI>::iterator it = skill.tekisei.begin();
 	for (; it != skill.tekisei.end(); ++it) {
+		if (*it == SKILL_TEKISEI_TURF) continue;
+		if (*it == SKILL_TEKISEI_DART) continue;
 		int iSel = combos[*it]->GetCurSel();
 		switch (iSel) {
 		case 0:
@@ -1202,7 +1202,6 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 		int nPt = GetSkillObtainPt(m_vSkillItems[i]);
 
 		wstring wsTekisei = skill.GetTekiseiStr();
-		wsTekisei = wsTekisei.substr(0, 1);
 		int nEval = GetEvalOfSkill(skill);
 
 		if (m_vSkillItems[i].bObtain) {
@@ -1239,7 +1238,6 @@ void CUmaEvaluatorDlg::UpdateSkillList()
 		const wstring& wsName = skill.sName;
 
 		wstring wsTekisei = skill.GetTekiseiStr();
-		wsTekisei = wsTekisei.substr(0, 1);
 		int nEval = GetEvalOfSkill(skill);
 
 		m_listCtrlSkillAcquired.InsertItem(i, WS2CS(wsTekisei));

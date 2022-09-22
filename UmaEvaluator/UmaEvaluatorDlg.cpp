@@ -982,7 +982,7 @@ void CUmaEvaluatorDlg::Detect()
 								}
 							}
 							if (!bFound) {
-								m_vSkillItemsAcquired.push_back(CSkillItem(iSubSkill, -1));
+								AddSkillItemAcquired(CSkillItem(iSubSkill, -1));
 							}
 						}
 					}
@@ -1027,6 +1027,24 @@ void CUmaEvaluatorDlg::Detect()
 					}
 					if (!bFound) {
 						AddSkillItemAcquired(CSkillItem(iSkill, -1));
+
+						//◎スキルなら○スキルを獲得済みスキルに追加
+						if (m_skills[iSkill].sName.substr(m_skills[iSkill].sName.length() - 1) == L"◎") {
+							int iSubSkill = m_skills[iSkill].iSubSkill;
+							if (iSubSkill > -1) {
+								bool bFound = false;
+								for (int j = 0; j < m_vSkillItemsAcquired.size(); ++j) {
+									if (m_vSkillItemsAcquired[j].iSkill == iSubSkill) {
+										bFound = true;
+										break;
+									}
+								}
+								if (!bFound) {
+									AddSkillItemAcquired(CSkillItem(iSubSkill, -1));
+								}
+							}
+						}
+
 					}
 				}
 			}

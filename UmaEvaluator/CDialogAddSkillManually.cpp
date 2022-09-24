@@ -27,6 +27,7 @@ void CDialogAddSkillManually::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_EDIT_NARROW, m_editNarrow);
     DDX_Control(pDX, IDC_LIST_SKILLS, m_listCtrlSkills);
     DDX_Control(pDX, IDC_COMBO_HINT_LEVEL, m_comboHintLv);
+    DDX_Control(pDX, IDC_STATIC_HINT_LV, m_stHintLv);
 }
 
 
@@ -43,6 +44,15 @@ BOOL CDialogAddSkillManually::OnInitDialog()
 {
     BOOL b = CDialogEx::OnInitDialog();
 
+    if (m_bAcquired) {
+        m_stHintLv.ShowWindow(SW_HIDE);
+        m_comboHintLv.ShowWindow(SW_HIDE);
+    }
+    else {
+        m_stHintLv.ShowWindow(SW_SHOW);
+        m_comboHintLv.ShowWindow(SW_SHOW);
+    }
+
     m_listCtrlSkills.InsertColumn(0, L"スキル名", LVCFMT_LEFT, 300);
     m_listCtrlSkills.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
@@ -51,13 +61,14 @@ BOOL CDialogAddSkillManually::OnInitDialog()
     return b;
 }
 
-bool CDialogAddSkillManually::Setup(const vector<CSkill>& skills, int& iSkill, int& nHintLv)
+bool CDialogAddSkillManually::Setup(const vector<CSkill>& skills, int& iSkill, int& nHintLv, bool bAcquired)
 {
     iSkill = -1;
     nHintLv = -1;
 
     m_iSkill = -1;
     m_nHintLv = -1;
+    m_bAcquired = bAcquired;
     m_skills = skills;
 
     if (DoModal() != IDOK)
@@ -104,7 +115,7 @@ void CDialogAddSkillManually::OnBnClickedOk()
         return;
     }
 
-    if (m_comboHintLv.GetCurSel() < 0) {
+    if (!m_bAcquired && m_comboHintLv.GetCurSel() < 0) {
         MessageBox(L"ヒントレベルを選択してください。");
         return;
     }
@@ -118,8 +129,9 @@ void CDialogAddSkillManually::OnBnClickedOk()
             break;
         }
     }
-
-    m_nHintLv = m_comboHintLv.GetCurSel();
+    
+    if (m_bAcquired)
+        m_nHintLv = m_comboHintLv.GetCurSel();
 
     CDialogEx::OnOK();
 }
@@ -142,7 +154,7 @@ void CDialogAddSkillManually::OnNMDblclkListSkills(NMHDR* pNMHDR, LRESULT* pResu
         return;
     }
 
-    if (m_comboHintLv.GetCurSel() < 0) {
+    if (!m_bAcquired && m_comboHintLv.GetCurSel() < 0) {
         MessageBox(L"ヒントレベルを選択してください。");
         return;
     }
@@ -155,6 +167,9 @@ void CDialogAddSkillManually::OnNMDblclkListSkills(NMHDR* pNMHDR, LRESULT* pResu
             break;
         }
     }
+
+    if (m_bAcquired)
+        m_nHintLv = m_comboHintLv.GetCurSel();
 
     *pResult = 0;
 

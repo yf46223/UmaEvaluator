@@ -147,6 +147,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR_SKILLS, &CUmaEvaluatorDlg::OnBnClickedButtonClearSkills)
 	ON_BN_CLICKED(IDC_BUTTON_ADD_SKILL_MANUALLY, &CUmaEvaluatorDlg::OnBnClickedButtonAddSkillManually)
+	ON_BN_CLICKED(IDC_BUTTON_ADD_SKILL_ACQUIRED_MANUALLY, &CUmaEvaluatorDlg::OnBnClickedButtonAddSkillAcquiredManually)
 END_MESSAGE_MAP()
 
 
@@ -2315,4 +2316,17 @@ void CUmaEvaluatorDlg::OnBnClickedButtonAddSkillManually()
 		return;
 
 	AddSkillItemCandidate(CSkillItem(iSkill, nHintLv));
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedButtonAddSkillAcquiredManually()
+{
+	CDialogAddSkillManually dlg;
+
+	int iSkill = -1;
+	int nHintLv = -1;
+	if (!dlg.Setup(m_skills, iSkill, nHintLv, true))
+		return;
+
+	AddSkillItemAcquired(CSkillItem(iSkill, -1));
 }

@@ -180,4 +180,5 @@ public:
 	afx_msg void OnLvnKeydownListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedButtonClearSkills();
 	afx_msg void OnBnClickedButtonAddSkillManually();
+	afx_msg void OnBnClickedButtonAddSkillAcquiredManually();
 };

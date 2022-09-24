@@ -28,13 +28,15 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
-	bool Setup(const vector<CSkill>& skills, int& iSkill, int& nHintLv);
+	bool Setup(const vector<CSkill>& skills, int& iSkill, int& nHintLv, bool bAcquired = false);
 	void UpdateList();
 
 private:
 	int m_iSkill;
 	int m_nHintLv;
+	bool m_bAcquired;
 	vector<CSkill> m_skills;
+
 public:
 	afx_msg void OnBnClickedOk();
 	CEdit m_editNarrow;
@@ -42,4 +44,5 @@ public:
 	afx_msg void OnEnChangeEditNarrow();
 	CComboBox m_comboHintLv;
 	afx_msg void OnNMDblclkListSkills(NMHDR* pNMHDR, LRESULT* pResult);
+	CStatic m_stHintLv;
 };

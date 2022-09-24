@@ -8,6 +8,7 @@
 #define IDD_UMAEVALUATOR_DIALOG         102
 #define IDR_MAINFRAME                   128
 #define IDD_DIALOG_REGISTER_SKILL       131
+#define IDD_DIALOG_ADD_SKILL_MANUALLY   133
 #define IDC_BUTTON1                     1000
 #define IDC_BUTTON_DETECT               1000
 #define IDC_BUTTON_SKILL_REGISTRATION   1001
@@ -34,6 +35,7 @@
 #define IDC_LIST_SKILL                  1023
 #define IDC_COMBO_UNIQUE_SKILL_LEVEL    1023
 #define IDC_LIST_SKILLS                 1023
+#define IDC_COMBO_HINT_LEVEL            1024
 #define IDC_EDIT_SKILL_NAME             1025
 #define IDC_LIST2                       1026
 #define IDC_LIST_CTRL_SKILL             1026
@@ -67,14 +69,16 @@
 #define IDC_LIST_CTRL_SKILL_ACQUIRED    1048
 #define IDC_STATIC_SKILL_EVAL_AQUIRED   1049
 #define IDC_BUTTON_CLEAR_SKILLS         1050
+#define IDC_STATIC_HINT_LV              1051
+#define IDC_BUTTON_ADD_SKILL_MANUALLY   1052
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        133
+#define _APS_NEXT_RESOURCE_VALUE        136
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1051
+#define _APS_NEXT_CONTROL_VALUE         1053
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -9,6 +9,7 @@
 #include "afxdialogex.h"
 #include <winuser.h>
 #include <fstream>
+#include "CDialogAddSkillManually.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -145,6 +146,7 @@ BEGIN_MESSAGE_MAP(CUmaEvaluatorDlg, CDialogEx)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_CTRL_SKILL_ACQUIRED, &CUmaEvaluatorDlg::OnLvnItemchangedListCtrlSkillAcquired)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_LIST_CTRL_SKILL_OBTAIN, &CUmaEvaluatorDlg::OnLvnKeydownListCtrlSkillObtain)
 	ON_BN_CLICKED(IDC_BUTTON_CLEAR_SKILLS, &CUmaEvaluatorDlg::OnBnClickedButtonClearSkills)
+	ON_BN_CLICKED(IDC_BUTTON_ADD_SKILL_MANUALLY, &CUmaEvaluatorDlg::OnBnClickedButtonAddSkillManually)
 END_MESSAGE_MAP()
 
 
@@ -2300,4 +2302,17 @@ void CUmaEvaluatorDlg::OnBnClickedButtonClearSkills()
 
 	UpdateSkillList();
 	UpdateEval();
+}
+
+
+void CUmaEvaluatorDlg::OnBnClickedButtonAddSkillManually()
+{
+	CDialogAddSkillManually dlg;
+
+	int iSkill = -1;
+	int nHintLv = -1;
+	if ( !dlg.Setup(m_skills, iSkill, nHintLv) )
+		return;
+
+	AddSkillItemCandidate(CSkillItem(iSkill, nHintLv));
 }

@@ -130,7 +130,7 @@ void CDialogAddSkillManually::OnBnClickedOk()
         }
     }
     
-    if (m_bAcquired)
+    if (!m_bAcquired)
         m_nHintLv = m_comboHintLv.GetCurSel();
 
     CDialogEx::OnOK();
@@ -168,7 +168,7 @@ void CDialogAddSkillManually::OnNMDblclkListSkills(NMHDR* pNMHDR, LRESULT* pResu
         }
     }
 
-    if (m_bAcquired)
+    if (!m_bAcquired)
         m_nHintLv = m_comboHintLv.GetCurSel();
 
     *pResult = 0;

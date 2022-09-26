@@ -1706,16 +1706,61 @@ void CUmaEvaluatorDlg::HideSkillItems()
 		m_checkOikomi.GetCheck() == BST_UNCHECKED,
 	};
 
+	bool bChedckedDart   = (m_checkDart  .GetCheck() == BST_CHECKED);
+	bool bChedckedShort  = (m_checkShort .GetCheck() == BST_CHECKED);
+	bool bChedckedMile   = (m_checkMile  .GetCheck() == BST_CHECKED);
+	bool bChedckedMiddle = (m_checkMiddle.GetCheck() == BST_CHECKED);
+	bool bChedckedLong   = (m_checkLong  .GetCheck() == BST_CHECKED);
+	bool bChedckedNige   = (m_checkNige  .GetCheck() == BST_CHECKED);
+	bool bChedckedSenkou = (m_checkSenkou.GetCheck() == BST_CHECKED);
+	bool bChedckedSashi  = (m_checkSashi .GetCheck() == BST_CHECKED);
+	bool bChedckedOikomi = (m_checkOikomi.GetCheck() == BST_CHECKED);
+
 	for (int i = 0; i < m_vSkillItems.size(); ++i) {
 		int iSkill = m_vSkillItems[i].iSkill;
 		const CSkill skill = m_skills[iSkill];
+		const set<SKILL_TEKISEI> t = skill.tekisei;
+
 		bool bHidden = false;
-		set<SKILL_TEKISEI>::iterator it = skill.tekisei.begin();
-		for (; it != skill.tekisei.end(); ++it) {
-			if (bHideTekisei[*it])
-				bHidden = true;
+
+		bool bHasDart   = (t.find(SKILL_TEKISEI_DART  ) != t.end());
+		bool bHasShort  = (t.find(SKILL_TEKISEI_SHORT ) != t.end());
+		bool bHasMile   = (t.find(SKILL_TEKISEI_MILE  ) != t.end());
+		bool bHasMiddle = (t.find(SKILL_TEKISEI_MIDDLE) != t.end());
+		bool bHasLong   = (t.find(SKILL_TEKISEI_LONG  ) != t.end());
+		bool bHasNige   = (t.find(SKILL_TEKISEI_NIGE  ) != t.end());
+		bool bHasSenkou = (t.find(SKILL_TEKISEI_SENKOU) != t.end());
+		bool bHasSashi  = (t.find(SKILL_TEKISEI_SASHI ) != t.end());
+		bool bHasOikomi = (t.find(SKILL_TEKISEI_OIKOMI) != t.end());
+
+		bool bMatchBaba = true;
+		if (bHasDart) {
+			bMatchBaba = bChedckedDart;
 		}
-		m_vSkillItems[i].bHidden = bHidden;
+
+		bool bMatchDistance = false;
+		if (!bHasShort && !bHasMile && !bHasMiddle && !bHasLong) {
+			bMatchDistance = true;
+		}
+		else {
+			if (bHasShort  && bChedckedShort ) bMatchDistance = true;
+			if (bHasMile   && bChedckedMile  ) bMatchDistance = true;
+			if (bHasMiddle && bChedckedMiddle) bMatchDistance = true;
+			if (bHasLong   && bChedckedLong  ) bMatchDistance = true;
+		}
+
+		bool bMatchKyakushitsu = false;
+		if (!bHasNige && !bHasSenkou && !bHasSashi && !bHasOikomi) {
+			bMatchKyakushitsu = true;
+		}
+		else {
+			if (bHasNige   && bChedckedNige  ) bMatchKyakushitsu = true;
+			if (bHasSenkou && bChedckedSenkou) bMatchKyakushitsu = true;
+			if (bHasSashi  && bChedckedSashi ) bMatchKyakushitsu = true;
+			if (bHasOikomi && bChedckedOikomi) bMatchKyakushitsu = true;
+		}
+
+		m_vSkillItems[i].bHidden = !(bMatchBaba && bMatchDistance && bMatchKyakushitsu);
 	}
 }
 

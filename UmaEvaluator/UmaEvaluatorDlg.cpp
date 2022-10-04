@@ -248,7 +248,10 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 		getline(iss, s, L'\t'); skill.SetTekiseiFromStr(s);
 		getline(iss, s, L'\t'); skill.sName = s;
 		getline(iss, s, L'\t');
-		if (s == L"") {
+		if (s != L"") {
+			skill.bGold = true;
+		}
+		else {
 			if (skill.sName.substr(skill.sName.length() - 1) == L"◎") {
 				s = skill.sName.substr(0, skill.sName.length() - 1) + L"◯";
 			}
@@ -1873,6 +1876,7 @@ void CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 	if (lpLvCustomDraw->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
 	{
 		SKILL_TYPE type = SKILL_TYPE_UNKNOWN;
+		bool bGold = false;
 		int j = 0;
 		for (int i = 0; i < m_vSkillItems.size(); ++i) {
 			if (m_vSkillItems[i].bHidden) continue;
@@ -1880,17 +1884,23 @@ void CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillCandidate(NMHDR* pNMHDR, LRESULT
 			if (lpLvCustomDraw->nmcd.dwItemSpec == j) {
 				int iSkill = m_vSkillItems[i].iSkill;
 				type = m_skills[iSkill].type;
+				bGold = m_skills[iSkill].bGold;
 				break;
 			}
 			++j;
 		}
 
-		switch (type) {
-		case SKILL_TYPE_ORANGE: lpLvCustomDraw->clrTextBk = RGB(252, 195,  38); break;
-		case SKILL_TYPE_BLUE  : lpLvCustomDraw->clrTextBk = RGB( 32, 220, 253); break;
-		case SKILL_TYPE_RED   : lpLvCustomDraw->clrTextBk = RGB(254, 170, 169); break;
-		case SKILL_TYPE_GREEN : lpLvCustomDraw->clrTextBk = RGB(188, 232,  54); break;
-		default               : lpLvCustomDraw->clrTextBk = GetSysColor(COLOR_WINDOW);
+		if (bGold) {
+			lpLvCustomDraw->clrTextBk = RGB(255, 251, 198);
+		}
+		else {
+			switch (type) {
+			case SKILL_TYPE_ORANGE: lpLvCustomDraw->clrTextBk = RGB(252, 195,  38); break;
+			case SKILL_TYPE_BLUE  : lpLvCustomDraw->clrTextBk = RGB( 32, 220, 253); break;
+			case SKILL_TYPE_RED   : lpLvCustomDraw->clrTextBk = RGB(254, 170, 169); break;
+			case SKILL_TYPE_GREEN : lpLvCustomDraw->clrTextBk = RGB(188, 232,  54); break;
+			default               : lpLvCustomDraw->clrTextBk = GetSysColor(COLOR_WINDOW);
+			}
 		}
 
 		*pResult = CDRF_NEWFONT;
@@ -1914,6 +1924,7 @@ void CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* p
 	if (lpLvCustomDraw->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
 	{
 		SKILL_TYPE type = SKILL_TYPE_UNKNOWN;
+		bool bGold = false;
 		int j = 0;
 		for (int i = 0; i < m_vSkillItems.size(); ++i) {
 			if (m_vSkillItems[i].bHidden) continue;
@@ -1921,17 +1932,23 @@ void CUmaEvaluatorDlg::OnCustomdrawListCtrlSkillObtain(NMHDR* pNMHDR, LRESULT* p
 			if (lpLvCustomDraw->nmcd.dwItemSpec == j) {
 				int iSkill = m_vSkillItems[i].iSkill;
 				type = m_skills[iSkill].type;
+				bGold = m_skills[iSkill].bGold;
 				break;
 			}
 			++j;
 		}
 
-		switch (type) {
-		case SKILL_TYPE_ORANGE: lpLvCustomDraw->clrTextBk = RGB(252, 195, 38); break;
-		case SKILL_TYPE_BLUE  : lpLvCustomDraw->clrTextBk = RGB(32, 220, 253); break;
-		case SKILL_TYPE_RED   : lpLvCustomDraw->clrTextBk = RGB(254, 170, 169); break;
-		case SKILL_TYPE_GREEN : lpLvCustomDraw->clrTextBk = RGB(188, 232, 54); break;
-		default               : lpLvCustomDraw->clrTextBk = GetSysColor(COLOR_WINDOW);
+		if (bGold) {
+			lpLvCustomDraw->clrTextBk = RGB(255, 251, 198);
+		}
+		else {
+			switch (type) {
+			case SKILL_TYPE_ORANGE: lpLvCustomDraw->clrTextBk = RGB(252, 195,  38); break;
+			case SKILL_TYPE_BLUE  : lpLvCustomDraw->clrTextBk = RGB( 32, 220, 253); break;
+			case SKILL_TYPE_RED   : lpLvCustomDraw->clrTextBk = RGB(254, 170, 169); break;
+			case SKILL_TYPE_GREEN : lpLvCustomDraw->clrTextBk = RGB(188, 232,  54); break;
+			default               : lpLvCustomDraw->clrTextBk = GetSysColor(COLOR_WINDOW);
+			}
 		}
 
 		*pResult = CDRF_NEWFONT;

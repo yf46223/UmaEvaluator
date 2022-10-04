@@ -62,9 +62,10 @@ public:
 	cv::Mat img_acquired;
 	cv::Mat img_acquired_title;
 	int iSubSkill;
+	bool bGold;
 
 public:
-	CSkill() : idx(0), nPt(0), nEval(0), type(SKILL_TYPE_UNKNOWN), iSubSkill(-1) {}
+	CSkill() : idx(0), nPt(0), nEval(0), type(SKILL_TYPE_UNKNOWN), iSubSkill(-1), bGold(false) {}
 
 	void SetTypeFromStr(const wstring& s) {
 		for (int i = 0; i < SKILL_TYPE_SIZE; ++i)

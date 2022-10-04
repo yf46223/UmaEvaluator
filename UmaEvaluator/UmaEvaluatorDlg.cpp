@@ -10,6 +10,7 @@
 #include <winuser.h>
 #include <fstream>
 #include "CDialogAddSkillManually.h"
+#include "CUtil.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -183,6 +184,8 @@ BOOL CUmaEvaluatorDlg::OnInitDialog()
 
 	// TODO: 初期化をここに追加します。
 
+	setlocale(LC_ALL, "Japanese");
+
 	m_listCtrlSkillCandidate.InsertColumn(0, L"適性"    , LVCFMT_LEFT, 40);
 	m_listCtrlSkillCandidate.InsertColumn(1, L"スキル名", LVCFMT_LEFT, 100);
 	m_listCtrlSkillCandidate.InsertColumn(2, L"Lv"      , LVCFMT_LEFT, 30);
@@ -258,15 +261,9 @@ void CUmaEvaluatorDlg::ReadSkillTSV()
 		}
 		vsSubSkill.push_back(s);
 
-		{
-			wstring sFilePNG = sSkillDir + to_wstring(skill.idx) + L".png";
-			skill.img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
-		}
+		skill.img = CUtil::ReadPNG(sSkillDir + to_wstring(skill.idx) + L".png");
 
-		{
-			wstring sFilePNG = sSkillDir + L"a" + to_wstring(skill.idx) + L".png";
-			skill.img_acquired = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
-		}
+		skill.img_acquired = CUtil::ReadPNG(sSkillDir + L"a" + to_wstring(skill.idx) + L".png");
 
 		m_skills.push_back(skill);
 	}
@@ -310,13 +307,11 @@ void CUmaEvaluatorDlg::ReadSkillLv()
 
 	for (int i = 0; i < 6; ++i) {
 		wstring si = to_wstring(i);
-		wstring sFilePNG = sImgDir + L"Lv" + si + L".png";
-		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		cv::Mat img = CUtil::ReadPNG(sImgDir + L"Lv" + si + L".png");
 		m_skillLv.push_back(img);
 	}
 
-	wstring sFilePNG = sImgDir + L"Lv0_gold.png";
-	cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+	cv::Mat img = CUtil::ReadPNG(sImgDir + L"Lv0_gold.png");
 	m_skillLv.push_back(img);
 }
 
@@ -329,8 +324,7 @@ void CUmaEvaluatorDlg::ReadUniqLv()
 
 	for (int i = 0; i < 6; ++i) {
 		wstring si = to_wstring(i+1);
-		wstring sFilePNG = sImgDir + L"uniqLv" + si + L".png";
-		cv::Mat img = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		cv::Mat img = CUtil::ReadPNG(sImgDir + L"uniqLv" + si + L".png");
 		m_uniqLv.push_back(img);
 	}
 }
@@ -574,8 +568,8 @@ int CUmaEvaluatorDlg::GetNumberOCR(const cv::Mat& img) const
 
 	wstring sBinDir = GetExeDir();
 	wstring sTessDir = sBinDir + L"tessdata-4.1.0";
-	string s(sTessDir.begin(), sTessDir.end());
 
+	string s = CUtil::WStringToString(sTessDir);
 	static auto ocr = cv::text::OCRTesseract::create(s.c_str(), "eng", "0123456789");
 
 	string text;
@@ -684,12 +678,8 @@ vector<pair<cv::Mat, bool> > CUmaEvaluatorDlg::GetSkillImages(const cv::Mat img_
 	wstring sImgDir = GetImgDir();
 
 	cv::Mat img_plus(img_finish, cv::Rect(390, 320, 35, 280));
-
-	wstring sFilePNG = sImgDir + L"plus.png";
-	cv::Mat img_plus_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
-
-	sFilePNG = sImgDir + L"plus_gold.png";
-	cv::Mat img_plus_gold_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+	cv::Mat img_plus_ref = CUtil::ReadPNG(sImgDir + L"plus.png");
+	cv::Mat img_plus_gold_ref = CUtil::ReadPNG(sImgDir + L"plus_gold.png");
 
 	map<int, bool> miPlusY; 
 	for (int i = 0; i < 4; ++i) {
@@ -742,8 +732,7 @@ vector<cv::Mat> CUmaEvaluatorDlg::GetSkillImagesAcquired(const cv::Mat img_finis
 	// 固有スキルはいれたくないので２番めから検出
 	cv::Mat img_acquired(img_finish, cv::Rect(345, 350, 40, 240));
 
-	wstring sFilePNG = sImgDir + L"acquired.png";
-	cv::Mat img_acquired_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+	cv::Mat img_acquired_ref = CUtil::ReadPNG(sImgDir + L"acquired.png");
 
 	set<int> siAcquiredY;
 	for (int i = 0; i < 3; ++i) {
@@ -800,6 +789,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonDetect()
 	}
 }
 
+
 void CUmaEvaluatorDlg::Detect()
 {
 	const int DEFAULT_WIDTH = 450;
@@ -817,8 +807,7 @@ void CUmaEvaluatorDlg::Detect()
 
 	// ウマ娘詳細
 	cv::Mat img_detail(img_finish, cv::Rect(170, 30, 110, 25));
-	wstring sFilePNG = sImgDir + L"detail_bar.png";
-	cv::Mat img_detail_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+	cv::Mat img_detail_ref = CUtil::ReadPNG(sImgDir + L"detail_bar.png");
 
 	if (MatchImage(img_detail, img_detail_ref)) {
 
@@ -897,15 +886,12 @@ void CUmaEvaluatorDlg::Detect()
 
 		{ // 切れ者
 			cv::Mat img_condition(img_finish, cv::Rect(65, 390, 110, 15));
-			wstring sFilePNG = sImgDir + L"condition_bar.png";
-			cv::Mat img_condition_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+			cv::Mat img_condition_ref = CUtil::ReadPNG(sImgDir + L"condition_bar.png");
 
 			if (MatchImage(img_condition, img_condition_ref)) {
 
 				cv::Mat img_condition_frame(img_finish, cv::Rect(0, 410, 450, 390));
-
-				wstring sFilePNG = sImgDir + L"kiremono.png";
-				cv::Mat img_kiremono = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+				cv::Mat img_kiremono = CUtil::ReadPNG(sImgDir + L"kiremono.png");
 
 				if (MatchImage(img_kiremono, img_condition_frame)) {
 					m_checkKiremono.SetCheck(BST_CHECKED);
@@ -917,8 +903,7 @@ void CUmaEvaluatorDlg::Detect()
 
 		{ // 固有スキルレベル
 			cv::Mat img_skill(img_finish, cv::Rect(310, 390, 45, 15));
-			wstring sFilePNG = sImgDir + L"skill_bar.png";
-			cv::Mat img_skill_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+			cv::Mat img_skill_ref = CUtil::ReadPNG(sImgDir + L"skill_bar.png");
 
 			if (MatchImage(img_skill, img_skill_ref)) {
 
@@ -935,8 +920,7 @@ void CUmaEvaluatorDlg::Detect()
 
 	{ // スキル取得
 		cv::Mat img_skill_select(img_finish, cv::Rect(15, 5, 100, 15));
-		wstring sFilePNG = sImgDir + L"skill_select.png";
-		cv::Mat img_skill_select_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+		cv::Mat img_skill_select_ref = CUtil::ReadPNG(sImgDir + L"skill_select.png");
 
 		if (MatchImage(img_skill_select, img_skill_select_ref)) {
 
@@ -1302,8 +1286,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 	cv::resize(img, img_finish, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
 	cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
-	wstring sFilePNG = sImgDir + L"skill_select.png";
-	cv::Mat img_skill_select_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+	cv::Mat img_skill_select_ref = CUtil::ReadPNG(sImgDir + L"skill_select.png");
 
 	// スキル取得
 	if (!MatchImage(img_skill_select, img_skill_select_ref)) {
@@ -1326,8 +1309,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistration()
 			continue;
 
 		wstring sSkillDir = sDataDir + L"skills\\";
-		wstring sFilePNG = sSkillDir + to_wstring(idx)+ L".png";
-		cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
+		CUtil::WritePNG(img_skill, sSkillDir + to_wstring(idx) + L".png");
 	}
 
 	ReadSkillTSV();
@@ -2186,8 +2168,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistrationAcquired()
 	cv::resize(img, img_finish, cv::Size(DEFAULT_WIDTH, DEFAULT_HEIGHT));
 
 	cv::Mat img_skill_select(img_finish, cv::Rect(0, 0, 100, 25));
-	wstring sFilePNG = sImgDir + L"skill_select.png";
-	cv::Mat img_skill_select_ref = cv::imread(string(sFilePNG.begin(), sFilePNG.end()));
+	cv::Mat img_skill_select_ref = CUtil::ReadPNG(sImgDir + L"skill_select.png");
 
 	// スキル取得
 	if (!MatchImage(img_skill_select, img_skill_select_ref)) {
@@ -2210,8 +2191,7 @@ void CUmaEvaluatorDlg::OnBnClickedButtonSkillRegistrationAcquired()
 			continue;
 
 		wstring sSkillDir = sDataDir + L"skills\\";
-		wstring sFilePNG = sSkillDir + L"a" + to_wstring(idx) + L".png";
-		cv::imwrite(string(sFilePNG.begin(), sFilePNG.end()), img_skill);
+		CUtil::WritePNG(img_skill, sSkillDir + L"a" + to_wstring(idx) + L".png");
 	}
 
 	ReadSkillTSV();
